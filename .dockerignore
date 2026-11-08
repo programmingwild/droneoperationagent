@@ -1,0 +1,15 @@
+.env
+.git
+.github
+.pytest_cache
+__pycache__
+*.pyc
+data/droneops.db
+data/checkpoints.sqlite
+data/vector_store.json
+data/local_embedder.pkl
+data/reports
+evals
+docs
+*.md
+!README.md

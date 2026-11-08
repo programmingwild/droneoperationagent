@@ -1,0 +1,24 @@
+# AWS App Runner (free tier / low cost) — build from source.
+# 1) Push repo to GitHub. 2) App Runner → Create service → Source: repository.
+# 3) Set env vars in the App Runner console: OPENAI_API_KEY, PINECONE_API_KEY, LANGSMITH_* (never commit).
+version: 1.0
+runtime: python312
+build:
+  commands:
+    pre-build:
+      - pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2"
+      - pip install -r requirements.txt
+      - python -m backend.app.rag.ingest --reset
+run:
+  command: python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+  network:
+    port: 8000
+    env: PORT
+  env:
+    - name: APP_ENV
+      value: production
+  secrets:
+    - name: OPENAI_API_KEY
+      value-from: "arn:aws:secretsmanager:REGION:ACCOUNT:secret:droneops/openai-api-key"
+    - name: PINECONE_API_KEY
+      value-from: "arn:aws:secretsmanager:REGION:ACCOUNT:secret:droneops/pinecone-api-key"

@@ -1,0 +1,46 @@
+# Drone Ops Agent — one-command local stack
+# Usage:
+#   cp .env.example .env   # add secrets (optional for offline demo)
+#   docker compose up --build
+# UI: http://localhost:8501   API: http://localhost:8000   (docs at /docs)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: droneops
+      POSTGRES_PASSWORD: droneops
+      POSTGRES_DB: droneops
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U droneops"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://droneops:droneops@db:5432/droneops
+      APP_ENV: production
+      FLIGHT_LOGS_DIR: data/sample_logs
+    depends_on:
+      db:
+        condition: service_healthy
+
+  streamlit:
+    build: .
+    command: streamlit run frontend/streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+    ports:
+      - "8501:8501"
+    environment:
+      DRONEOPS_API: http://api:8000
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

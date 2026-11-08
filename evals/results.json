@@ -1,0 +1,681 @@
+{
+  "ran_at": "2026-11-08T14:33:55.868590+00:00",
+  "settings": {
+    "embedding_provider": "auto",
+    "vector_backend": "auto",
+    "top_k": 4,
+    "confidence_threshold": 0.33
+  },
+  "n_questions": 20,
+  "hit_at_1": 0.9,
+  "hit_at_k": 1.0,
+  "confident_rate": 1.0,
+  "mean_top_score": 0.5639,
+  "per_question": [
+    {
+      "id": "FAA-01",
+      "question": "What is the maximum altitude a small UAS may fly under 14 CFR Part 107?",
+      "expected_sources": [
+        "faa_part_107.md"
+      ],
+      "retrieved": [
+        {
+          "source": "faa_part_107.md",
+          "section": "FAA Part 107 \u2014 Small Unmanned Aircraft Systems (condensed for RAG)",
+          "score": 0.5199
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.51 Operating limitations",
+          "score": 0.4832
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.3 Definitions",
+          "score": 0.3982
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.37 Right of way",
+          "score": 0.3924
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5199247598648071,
+      "confident": true
+    },
+    {
+      "id": "FAA-02",
+      "question": "What minimum flight visibility is required from the control station under Part 107?",
+      "expected_sources": [
+        "faa_part_107.md"
+      ],
+      "retrieved": [
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.51 Operating limitations",
+          "score": 0.4902
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.33 Visual observers",
+          "score": 0.4436
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.49 Preflight familiarization and inspection",
+          "score": 0.4265
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.29 Operation at night",
+          "score": 0.3862
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.4901799261569977,
+      "confident": true
+    },
+    {
+      "id": "FAA-03",
+      "question": "What are the minimum cloud clearance requirements under Part 107?",
+      "expected_sources": [
+        "faa_part_107.md"
+      ],
+      "retrieved": [
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.51 Operating limitations",
+          "score": 0.5118
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "FAA Part 107 \u2014 Small Unmanned Aircraft Systems (condensed for RAG)",
+          "score": 0.4048
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.200/205 Waivers",
+          "score": 0.3669
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.49 Preflight familiarization and inspection",
+          "score": 0.3419
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5117684602737427,
+      "confident": true
+    },
+    {
+      "id": "FAA-04",
+      "question": "Can you fly over an uninvolved person under Part 107?",
+      "expected_sources": [
+        "faa_part_107.md"
+      ],
+      "retrieved": [
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.37 Right of way",
+          "score": 0.4101
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.12 Remote pilot certificate",
+          "score": 0.3976
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.200/205 Waivers",
+          "score": 0.3962
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.41 Operation in certain airspace",
+          "score": 0.3935
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.4100935459136963,
+      "confident": true
+    },
+    {
+      "id": "FAA-05",
+      "question": "Which airspace classes require prior ATC authorization before a Part 107 flight?",
+      "expected_sources": [
+        "faa_part_107.md"
+      ],
+      "retrieved": [
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.41 Operation in certain airspace",
+          "score": 0.643
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.49 Preflight familiarization and inspection",
+          "score": 0.464
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "FAA Part 107 \u2014 Small Unmanned Aircraft Systems (condensed for RAG)",
+          "score": 0.3874
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.65 Aeronautical knowledge recency",
+          "score": 0.3623
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.6429654955863953,
+      "confident": true
+    },
+    {
+      "id": "FAA-06",
+      "question": "What are the requirements to operate a small UAS at night under Part 107?",
+      "expected_sources": [
+        "faa_part_107.md"
+      ],
+      "retrieved": [
+        {
+          "source": "faa_part_107.md",
+          "section": "FAA Part 107 \u2014 Small Unmanned Aircraft Systems (condensed for RAG)",
+          "score": 0.536
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.29 Operation at night",
+          "score": 0.4957
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.3 Definitions",
+          "score": 0.4613
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.200/205 Waivers",
+          "score": 0.4536
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5360255241394043,
+      "confident": true
+    },
+    {
+      "id": "DGCA-01",
+      "question": "What is the maximum altitude for drone operations in India under DGCA Drone Rules 2021?",
+      "expected_sources": [
+        "dgca_drone_rules.md"
+      ],
+      "retrieved": [
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "DGCA Drone Rules 2021 \u2014 India (condensed for RAG)",
+          "score": 0.6914
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Altitude limit",
+          "score": 0.6149
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Airspace zones (Digital Sky)",
+          "score": 0.5626
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Applicability and categories",
+          "score": 0.5065
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.6914225220680237,
+      "confident": true
+    },
+    {
+      "id": "DGCA-02",
+      "question": "What is required to fly a drone in a yellow zone in India?",
+      "expected_sources": [
+        "dgca_drone_rules.md"
+      ],
+      "retrieved": [
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Airspace zones (Digital Sky)",
+          "score": 0.5978
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Applicability and categories",
+          "score": 0.5365
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "DGCA Drone Rules 2021 \u2014 India (condensed for RAG)",
+          "score": 0.5293
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Equipment and operational requirements",
+          "score": 0.5096
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5977604389190674,
+      "confident": true
+    },
+    {
+      "id": "DGCA-03",
+      "question": "Can a drone be operated in a red zone in India?",
+      "expected_sources": [
+        "dgca_drone_rules.md"
+      ],
+      "retrieved": [
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Airspace zones (Digital Sky)",
+          "score": 0.6278
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "DGCA Drone Rules 2021 \u2014 India (condensed for RAG)",
+          "score": 0.5293
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Equipment and operational requirements",
+          "score": 0.4505
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Remote pilot certificate",
+          "score": 0.4203
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.6278418898582458,
+      "confident": true
+    },
+    {
+      "id": "DGCA-04",
+      "question": "What does NPNT mean in the Indian drone framework?",
+      "expected_sources": [
+        "dgca_drone_rules.md"
+      ],
+      "retrieved": [
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "NPNT (No Permission \u2013 No Takeoff)",
+          "score": 0.6269
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Equipment and operational requirements",
+          "score": 0.5182
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Applicability and categories",
+          "score": 0.4805
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Insurance and operator obligations",
+          "score": 0.457
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.6268534064292908,
+      "confident": true
+    },
+    {
+      "id": "EASA-01",
+      "question": "What is the maximum altitude for UAS in the EASA open category?",
+      "expected_sources": [
+        "easa_open_category.md"
+      ],
+      "retrieved": [
+        {
+          "source": "easa_open_category.md",
+          "section": "Open category overview",
+          "score": 0.6304
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "EASA Open Category \u2014 UAS operations (condensed for RAG)",
+          "score": 0.5752
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "Subcategory A2 (fly close to people)",
+          "score": 0.4051
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "Specific category",
+          "score": 0.3838
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.6303733587265015,
+      "confident": true
+    },
+    {
+      "id": "EASA-02",
+      "question": "What minimum distance from uninvolved people applies to EASA A2 subcategory operations?",
+      "expected_sources": [
+        "easa_open_category.md"
+      ],
+      "retrieved": [
+        {
+          "source": "easa_open_category.md",
+          "section": "Subcategory A2 (fly close to people)",
+          "score": 0.519
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "Subcategory A1 (fly over people)",
+          "score": 0.3922
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "EASA Open Category \u2014 UAS operations (condensed for RAG)",
+          "score": 0.3811
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "Subcategory A3 (fly far from people)",
+          "score": 0.3707
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5189788341522217,
+      "confident": true
+    },
+    {
+      "id": "EASA-03",
+      "question": "How far from people must EASA A3 subcategory operations take place?",
+      "expected_sources": [
+        "easa_open_category.md"
+      ],
+      "retrieved": [
+        {
+          "source": "easa_open_category.md",
+          "section": "Subcategory A3 (fly far from people)",
+          "score": 0.479
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "EASA Open Category \u2014 UAS operations (condensed for RAG)",
+          "score": 0.4339
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "Specific category",
+          "score": 0.4317
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "Subcategory A2 (fly close to people)",
+          "score": 0.4168
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.4789893925189972,
+      "confident": true
+    },
+    {
+      "id": "MNT-01",
+      "question": "What is the nominal endurance of the VX-6 hexacopter?",
+      "expected_sources": [
+        "hexacopter_flight_manual.md",
+        "hexacopter_uav_design_paper.pdf"
+      ],
+      "retrieved": [
+        {
+          "source": "maintenance_checklist.md",
+          "section": "VX-6 Hexacopter \u2014 Maintenance Checklist",
+          "score": 0.6308
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
+          "score": 0.6157
+        },
+        {
+          "source": "hexacopter_uav_design_paper.pdf",
+          "section": "page 1",
+          "score": 0.5464
+        },
+        {
+          "source": "hexacopter_uav_design_paper.pdf",
+          "section": "page 1",
+          "score": 0.4765
+        }
+      ],
+      "hit_at_1": false,
+      "hit_at_k": true,
+      "top_score": 0.6308113932609558,
+      "confident": true
+    },
+    {
+      "id": "MNT-02",
+      "question": "What is the VX-6 maximum steady wind limit and gust abort criterion?",
+      "expected_sources": [
+        "hexacopter_flight_manual.md"
+      ],
+      "retrieved": [
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Operating envelope",
+          "score": 0.6297
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Abort/RTL criteria",
+          "score": 0.558
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Flight modes",
+          "score": 0.4144
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
+          "score": 0.3996
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.6296589970588684,
+      "confident": true
+    },
+    {
+      "id": "MNT-03",
+      "question": "What hover voltage sag indicates a battery problem on the VX-6?",
+      "expected_sources": [
+        "hexacopter_flight_manual.md",
+        "maintenance_checklist.md"
+      ],
+      "retrieved": [
+        {
+          "source": "maintenance_checklist.md",
+          "section": "Anomaly thresholds (from flight-log review)",
+          "score": 0.6574
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Power system and C-rate",
+          "score": 0.5424
+        },
+        {
+          "source": "maintenance_checklist.md",
+          "section": "50-hour / 100-flight inspection",
+          "score": 0.4576
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Flight modes",
+          "score": 0.4516
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.6574416160583496,
+      "confident": true
+    },
+    {
+      "id": "MNT-04",
+      "question": "At what vibration level should a VX-6 flight be aborted?",
+      "expected_sources": [
+        "hexacopter_flight_manual.md",
+        "maintenance_checklist.md"
+      ],
+      "retrieved": [
+        {
+          "source": "hexacopter_uav_design_paper.pdf",
+          "section": "page 1",
+          "score": 0.5103
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Flight modes",
+          "score": 0.4909
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
+          "score": 0.4596
+        },
+        {
+          "source": "maintenance_checklist.md",
+          "section": "VX-6 Hexacopter \u2014 Maintenance Checklist",
+          "score": 0.4278
+        }
+      ],
+      "hit_at_1": false,
+      "hit_at_k": true,
+      "top_score": 0.5103242993354797,
+      "confident": true
+    },
+    {
+      "id": "MNT-05",
+      "question": "What motor current deviation from the 6-motor mean is an anomaly?",
+      "expected_sources": [
+        "maintenance_checklist.md"
+      ],
+      "retrieved": [
+        {
+          "source": "maintenance_checklist.md",
+          "section": "Anomaly thresholds (from flight-log review)",
+          "score": 0.5528
+        },
+        {
+          "source": "hexacopter_uav_design_paper.pdf",
+          "section": "page 1",
+          "score": 0.3934
+        },
+        {
+          "source": "maintenance_checklist.md",
+          "section": "50-hour / 100-flight inspection",
+          "score": 0.3817
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
+          "score": 0.3134
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5527979731559753,
+      "confident": true
+    },
+    {
+      "id": "MNT-06",
+      "question": "How much battery reserve must remain before landing in VX-6 operations?",
+      "expected_sources": [
+        "hexacopter_flight_manual.md",
+        "maintenance_checklist.md"
+      ],
+      "retrieved": [
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Battery handling",
+          "score": 0.5112
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Flight modes",
+          "score": 0.435
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Power system and C-rate",
+          "score": 0.4308
+        },
+        {
+          "source": "maintenance_checklist.md",
+          "section": "VX-6 Hexacopter \u2014 Maintenance Checklist",
+          "score": 0.3825
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5112411975860596,
+      "confident": true
+    },
+    {
+      "id": "MNT-07",
+      "question": "After an anomaly threshold breach, what must happen before the next flight?",
+      "expected_sources": [
+        "maintenance_checklist.md"
+      ],
+      "retrieved": [
+        {
+          "source": "maintenance_checklist.md",
+          "section": "Corrective actions",
+          "score": 0.5027
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.21 In-flight emergency",
+          "score": 0.3979
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.15 Condition for safe operation",
+          "score": 0.3379
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.49 Preflight familiarization and inspection",
+          "score": 0.3241
+        }
+      ],
+      "hit_at_1": true,
+      "hit_at_k": true,
+      "top_score": 0.5027104616165161,
+      "confident": true
+    }
+  ],
+  "llm_judge": "skipped (offline)"
+}

@@ -1,0 +1,8 @@
+{
+  "faa_part_107.md": {"doc_type": "regulation", "regulation": "faa_part_107"},
+  "easa_open_category.md": {"doc_type": "regulation", "regulation": "easa_open"},
+  "dgca_drone_rules.md": {"doc_type": "regulation", "regulation": "dgca_india"},
+  "hexacopter_flight_manual.md": {"doc_type": "manual", "regulation": null},
+  "maintenance_checklist.md": {"doc_type": "checklist", "regulation": null},
+  "hexacopter_uav_design_paper.pdf": {"doc_type": "paper", "regulation": null}
+}
