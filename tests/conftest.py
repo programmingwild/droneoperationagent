@@ -9,6 +9,8 @@ sys.path.insert(0, str(ROOT))
 
 _tmp = Path(tempfile.mkdtemp(prefix="droneops-test-"))
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
+os.environ["LLM_PROVIDER"] = "local"  # force offline/hermetic; ignore any .env key
+os.environ["OPENAI_API_KEY"] = ""
 os.environ["EMBEDDING_PROVIDER"] = "local"
 os.environ["VECTOR_BACKEND"] = "local"
 os.environ["LOCAL_VECTOR_STORE_PATH"] = str(_tmp / "vector_store.json")
