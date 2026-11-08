@@ -69,12 +69,16 @@ docs/            demo.gif, screenshot_approval_banner.jpeg
 
 ## Setup (local, offline-capable)
 
+**Prereqs:** Python 3.12+. (Optional) [Docker Desktop](https://www.docker.com/products/docker-desktop/) for the one-command stack.
+
 ```bash
 python -m venv .venv
-# Windows: .venv\Scripts\activate   |   macOS/Linux: source .venv/bin/activate
+# Windows (PowerShell): .\.venv\Scripts\Activate.ps1
+# Windows (cmd):        .venv\Scripts\activate.bat
+# macOS/Linux:          source .venv/bin/activate
 pip install -r requirements.txt
 
-cp .env.example .env   # optional: add OPENAI_API_KEY / PINECONE_API_KEY for full mode
+copy .env.example .env   # Windows (or: cp .env.example .env) — add keys only in .env
 
 # Build the corpus + vector index (uses local embeddings if no OpenAI key)
 python -m backend.app.rag.ingest --reset
@@ -91,16 +95,16 @@ python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 **UI (Streamlit):**
 ```bash
 streamlit run frontend/streamlit_app.py
-# UI: http://localhost:8501  (points to DRONEOPS_API, default http://127.0.0.1:8000)
+# UI: http://localhost:8501  (DRONEOPS_API defaults to http://127.0.0.1:8000)
 ```
 
 **One command (Docker Compose):**
 ```bash
-cp .env.example .env
+copy .env.example .env   # set secrets in .env (never commit)
 docker compose up --build
-# UI http://localhost:8501  |  API http://localhost:8000
+# UI http://localhost:8501  |  API http://localhost:8000  |  Postgres internal
 ```
-> Compose runs Postgres for the API; the image bakes the corpus+embeddings for a fast offline cold start. Docker must be installed.
+**Docker setup (Windows):** install [Docker Desktop](https://www.docker.com/products/docker-desktop/), enable WSL2 backend if prompted, start Docker Desktop, then run the commands above from the repo root. Compose runs Postgres for the API; the image bakes the corpus + embeddings for an offline cold start. *Docker isn’t installed in this dev environment, so run/verify this on your Docker-enabled machine.*
 
 ## API
 
@@ -125,19 +129,23 @@ Latest checked-in eval (`evals/results.json`, local embeddings, `top_k=4`, thres
 
 ## LangSmith tracing
 
-Tracing is **env-gated** and off by default. To enable:
+Tracing is **env-gated** and off by default. Enable it in `.env`:
 ```env
 LANGSMITH_TRACING=true
-LANGSMITH_API_KEY=...
-LANGSMITH_PROJECT=drone-ops-agent
+LANGSMITH_API_KEY=<your-rotated-key>   # never commit
+LANGSMITH_PROJECT=droneops
+# regional/custom endpoint if needed (e.g. EU or AWS-hosted):
+LANGSMITH_ENDPOINT=https://aws.api.smith.langchain.com
 ```
-`/health` reports `langsmith_tracing`.
+`/health` reports `langsmith_tracing`. Restart the API after changes.
 
-**Add a trace screenshot (once you have keys):**
-1. Set the vars above in `.env` and restart the API.
-2. Run a query (e.g., via Streamlit or `POST /chat`) so a traced run is recorded.
-3. Open the run in [LangSmith](https://smith.langchain.com/) → your project → capture the run/graph trace.
-4. Save it as `docs/langsmith_trace.png` and reference it in this README (replace this note with `![LangSmith trace](docs/langsmith_trace.png)`). Keep keys out of commits.
+**Trace screenshot (required artifact):** `docs/langsmith_trace.png` is currently a **placeholder** — replace it with a real trace from your project:
+1. Set the vars above (use a **rotated** key; never paste keys in chat/commits) and restart the API.
+2. Run a traced query (`POST /chat` or via Streamlit). For the richest trace (LLM spans), set `OPENAI_API_KEY` too.
+3. Open [LangSmith](https://smith.langchain.com/) → project `droneops` → capture the run/graph trace.
+4. Overwrite `docs/langsmith_trace.png` with the real screenshot.
+
+![LangSmith trace (placeholder — replace with real trace)](docs/langsmith_trace.png)
 
 ## Wiring a real NOTAM provider
 
