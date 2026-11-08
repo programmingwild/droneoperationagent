@@ -131,7 +131,21 @@ LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=...
 LANGSMITH_PROJECT=drone-ops-agent
 ```
-`/health` reports `langsmith_tracing`. Capture and commit a trace screenshot for your demo (not included here, since tracing requires a live key/project).
+`/health` reports `langsmith_tracing`.
+
+**Add a trace screenshot (once you have keys):**
+1. Set the vars above in `.env` and restart the API.
+2. Run a query (e.g., via Streamlit or `POST /chat`) so a traced run is recorded.
+3. Open the run in [LangSmith](https://smith.langchain.com/) → your project → capture the run/graph trace.
+4. Save it as `docs/langsmith_trace.png` and reference it in this README (replace this note with `![LangSmith trace](docs/langsmith_trace.png)`). Keep keys out of commits.
+
+## Wiring a real NOTAM provider
+
+Default is **simulated and labelled** (safe for demo). To use a real keyed provider (FAA official access is registered; many teams use a commercial NOTAM API):
+1. Choose a provider and get its endpoint + API key.
+2. In `.env`: `NOTAM_PROVIDER=http`, `NOTAM_API_URL=<provider endpoint>`, `NOTAM_API_KEY=<key>`. If the key is a query param, set `NOTAM_API_KEY_PARAM` (e.g. `access_key`) instead of the header.
+3. Restart the API and call with coords (e.g., `{"query":"check airspace","lat":28.61,"lon":77.20}`) — confirm `notam_source` shows `http:<host>` and advisories are real.
+4. If the provider fails, the tool **falls back to a clearly-labelled simulated advisory** (never silent). Verify NOTAMs/TFRs with an authoritative briefing before any real flight.
 
 ## Demo assets
 
@@ -147,7 +161,7 @@ LANGSMITH_PROJECT=drone-ops-agent
 | Battery-range estimator | **Real** (physics model) | C-rate, voltage sag, wind margin, reserve; deterministic. |
 | Flight-log parser + anomaly scoring | **Real** (deterministic) | CSV schema, imbalance/vibration/sag/temp rules, verdict, ticket creation. |
 | METAR/TAF (aviationweather.gov) | **Real, no key**, with cache | Graceful offline mode. |
-| NOTAM feed | **SIMULATED** (`notam_source: "simulated"`) | FAA NOTAM Search needs registered credentials; responses are clearly flagged. **Do not treat as operational.** Wire a keyed NOTAM/TFR source before production. |
+| NOTAM feed | **Pluggable: SIMULATED by default** (clearly labelled) or **real HTTP provider** when configured | METAR/TAF is real (aviationweather.gov). For real NOTAMs set `NOTAM_PROVIDER=http`, `NOTAM_API_URL`, `NOTAM_API_KEY` (and `NOTAM_API_KEY_HEADER`/`NOTAM_API_KEY_PARAM` as needed). Responses are best-effort mapped and `notam_source` is truthful; failures fall back to a labelled simulated advisory. **Never treat simulated NOTAMs as operational.** Verify via an authoritative briefing before flight. |
 | LLM answers | **Real (OpenAI) or labelled offline fallback** | Without `OPENAI_API_KEY`, responses are extractive and explicitly marked `[OFFLINE MODE]`. |
 | Sample flight log / generated paper asset | **Sample/synthetic corpus assets** | For reproducible demo/eval; replace with your real fleet data. |
 

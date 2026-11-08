@@ -41,6 +41,11 @@ class Settings(BaseSettings):
 
     # --- NOTAM / airspace proxy ---
     aviationweather_base_url: str = "https://aviationweather.gov/api/data"
+    notam_provider: str = "simulated"  # simulated | http (real keyed endpoint)
+    notam_api_url: str | None = None  # e.g. your commercial NOTAM provider endpoint
+    notam_api_key: str | None = None
+    notam_api_key_header: str = "Authorization"  # header name carrying the key
+    notam_api_key_param: str | None = None  # alternatively pass key as a query param name
     notam_cache_ttl_s: int = 900
     http_timeout_s: float = 8.0
 
