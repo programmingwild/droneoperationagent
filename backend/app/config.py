@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     langsmith_tracing: bool = False
     langsmith_api_key: str | None = None
     langsmith_project: str = "drone-ops-agent"
+    langsmith_endpoint: str | None = None  # e.g. https://eu.api.smith.langchain.com or https://aws.api.smith.langchain.com
 
     # --- NOTAM / airspace proxy ---
     aviationweather_base_url: str = "https://aviationweather.gov/api/data"
