@@ -136,24 +136,23 @@ Tracing is **env-gated** and off by default. Enable it in `.env`:
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=<your-rotated-key>   # never commit
 LANGSMITH_PROJECT=droneops
-# regional/custom endpoint if needed (e.g. EU or AWS-hosted):
-LANGSMITH_ENDPOINT=https://aws.api.smith.langchain.com
+# regional/custom endpoint if needed (EU or AWS-hosted workspaces):
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
 ```
-`/health` reports `langsmith_tracing`. Restart the API after changes.
+`/health` reports `langsmith_tracing`. Restart the API after changes. Keys are scoped per workspace: a key created in one LangSmith org cannot read another org's projects, so create the key in the same workspace you open in the UI.
 
-**Trace screenshot (required artifact):** `docs/langsmith_trace.png` is a **rendered snapshot of a real trace** fetched read-only from the LangSmith API (project `droneops`, trace `01a1cde7-…`, 7 spans, 0 errors). It shows the graph run tree (`LangGraph → triage → maintenance → safety_supervisor → finalize`) plus the root run inputs/outputs.
+**Trace screenshot (required artifact):** `docs/langsmith_trace.png` is a **real screenshot of the LangSmith web UI**, not a mock-up or an API re-render. It shows project `droneops`, trace `01a1ce42-c79b-77e6-ad0b-0be19e30afb6`: 11 spans, 0 errors, 1.89 s, status `success`, including the LLM span `ChatOpenAI openai/gpt-oss-120b`. Visible in the tree: `LangGraph → triage → ChatOpenAI → _check_refusal → _route_triage → maintenance → safety_supervisor → _route_after_safety → finalize`, with the query (*"Analyze the last flight log and open a maintenance ticket if needed"*) and the grounded answer (anomaly score 85/100, `recommended_action: INSPECT`).
 
 Regenerate / capture your own:
 1. Set the vars above (use a **rotated** key; never paste keys in chat/commits) and restart the API.
 2. Run a traced query (`POST /chat` or via Streamlit).
-3. Either open [LangSmith](https://smith.langchain.com/) → project `droneops` → run/graph trace and screenshot it, or regenerate this snapshot:
+3. Open [LangSmith](https://smith.langchain.com/) → project `droneops` → the trace, then either screenshot it manually or automate it:
    ```bash
-   python scripts/fetch_langsmith_trace.py        # lists recent traces + trace ids
-   python scripts/render_langsmith_trace.py <trace_id>
+   python scripts/capture_langsmith_ui.py <session.json> <trace_url> docs/langsmith_trace.png --width 1600 --height 1200
    ```
-   (the renderer writes `docs/langsmith_trace.html`; screenshot it to `docs/langsmith_trace.png`).
+   `scripts/capture_langsmith_ui.py` drives headless Edge over CDP and injects an existing logged-in session into `localStorage` (the session JSON is passed by path and is **never** written to the repo). Honest caveat: this exists because the LangSmith app requires an interactive OAuth login, so unattended/CI capture is not possible — it is a local convenience script, not a CI step. The older API-only helpers (`scripts/fetch_langsmith_trace.py`, `scripts/render_langsmith_trace.py`) remain for listing traces and rendering a static HTML fallback.
 
-![LangSmith trace — real run from project droneops](docs/langsmith_trace.png)
+![LangSmith trace — real UI screenshot of run 01a1ce42 in project droneops](docs/langsmith_trace.png)
 
 ## Wiring a real NOTAM provider
 
