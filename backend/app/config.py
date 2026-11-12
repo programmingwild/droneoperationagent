@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     # Groq exposes an OpenAI-compatible endpoint, so we reuse the same client.
     groq_api_key: str | None = None
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
     groq_base_url: str = "https://api.groq.com/openai/v1"
     embedding_model: str = "text-embedding-3-small"
     # auto = groq/openai when a key is present, else the explicit offline fallback
