@@ -139,13 +139,19 @@ LANGSMITH_ENDPOINT=https://aws.api.smith.langchain.com
 ```
 `/health` reports `langsmith_tracing`. Restart the API after changes.
 
-**Trace screenshot (required artifact):** `docs/langsmith_trace.png` is currently a **placeholder** — replace it with a real trace from your project:
-1. Set the vars above (use a **rotated** key; never paste keys in chat/commits) and restart the API.
-2. Run a traced query (`POST /chat` or via Streamlit). For the richest trace (LLM spans), set `OPENAI_API_KEY` too.
-3. Open [LangSmith](https://smith.langchain.com/) → project `droneops` → capture the run/graph trace.
-4. Overwrite `docs/langsmith_trace.png` with the real screenshot.
+**Trace screenshot (required artifact):** `docs/langsmith_trace.png` is a **rendered snapshot of a real trace** fetched read-only from the LangSmith API (project `droneops`, trace `01a1cde7-…`, 7 spans, 0 errors). It shows the graph run tree (`LangGraph → triage → maintenance → safety_supervisor → finalize`) plus the root run inputs/outputs.
 
-![LangSmith trace (placeholder — replace with real trace)](docs/langsmith_trace.png)
+Regenerate / capture your own:
+1. Set the vars above (use a **rotated** key; never paste keys in chat/commits) and restart the API.
+2. Run a traced query (`POST /chat` or via Streamlit).
+3. Either open [LangSmith](https://smith.langchain.com/) → project `droneops` → run/graph trace and screenshot it, or regenerate this snapshot:
+   ```bash
+   python scripts/fetch_langsmith_trace.py        # lists recent traces + trace ids
+   python scripts/render_langsmith_trace.py <trace_id>
+   ```
+   (the renderer writes `docs/langsmith_trace.html`; screenshot it to `docs/langsmith_trace.png`).
+
+![LangSmith trace — real run from project droneops](docs/langsmith_trace.png)
 
 ## Wiring a real NOTAM provider
 
