@@ -1,4 +1,4 @@
-"""Retrieval evaluation harness (offline-safe; no LLM judge).
+"""Retrieval evaluation harness (offline-safe; LLM-as-judge runs live when GROQ_API_KEY is set).
 
 Run from repo root:  python -m backend.app.evals.run_eval
 Writes:              evals/results.json
@@ -9,10 +9,28 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ..config import REPO_ROOT, get_settings
-from ..rag.retrieve import retrieve
+from ..rag.retrieve import format_context, retrieve
 
 DATASET = Path(__file__).with_name("eval_dataset.json")
 RESULTS = REPO_ROOT / "evals" / "results.json"
+
+
+def _judge_context(question: str, context: str) -> str | None:
+    """Ask Groq whether the retrieved context suffices to answer. None when offline/unavailable."""
+    try:
+        from ..agents.llm import chat
+        answer = chat(
+            "You are a strict evaluation judge. Reply with exactly one word: SUFFICIENT or INSUFFICIENT.",
+            f"Question: {question}\n\nRetrieved context:\n{context}\n\n"
+            "Does the context contain enough information to answer the question?",
+        ).strip().upper()
+        if "INSUFFICIENT" in answer:
+            return "INSUFFICIENT"
+        if "SUFFICIENT" in answer:
+            return "SUFFICIENT"
+        return None
+    except Exception:
+        return None
 
 
 def run_eval(k: int = 4) -> dict:
@@ -27,6 +45,7 @@ def run_eval(k: int = 4) -> dict:
             regulation=item.get("regulation"),
         )
         sources = [c.source for c in retr.citations]
+        judge = _judge_context(item["question"], format_context(retr))
         hit1 = bool(sources) and sources[0] in item["expected_sources"]
         hitk = any(s in item["expected_sources"] for s in sources)
         hits_at_1 += hit1
@@ -41,9 +60,24 @@ def run_eval(k: int = 4) -> dict:
             "hit_at_k": hitk,
             "top_score": retr.top_score,
             "confident": retr.confident,
+            "judge": judge,
         })
 
     n = len(dataset)
+    judges = [r.get("judge") for r in rows if r.get("judge")]
+    judge_result: dict | str
+    if judges:
+        sufficient = sum(1 for j in judges if j == "SUFFICIENT")
+        judge_result = {
+            "status": "ran",
+            "provider": "groq",
+            "n": len(judges),
+            "sufficient": sufficient,
+            "insufficient": len(judges) - sufficient,
+            "sufficient_rate": round(sufficient / len(judges), 3),
+        }
+    else:
+        judge_result = "skipped (offline)"
     result = {
         "ran_at": datetime.now(timezone.utc).isoformat(),
         "settings": {
@@ -58,7 +92,7 @@ def run_eval(k: int = 4) -> dict:
         "confident_rate": round(confident / n, 3),
         "mean_top_score": round(statistics.mean(r["top_score"] for r in rows), 4),
         "per_question": rows,
-        "llm_judge": "skipped (offline)",
+        "llm_judge": judge_result,
     }
     RESULTS.parent.mkdir(parents=True, exist_ok=True)
     RESULTS.write_text(json.dumps(result, indent=2), encoding="utf-8")

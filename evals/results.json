@@ -1,5 +1,5 @@
 {
-  "ran_at": "2026-11-12T05:30:39.596549+00:00",
+  "ran_at": "2026-11-12T07:20:18.441555+00:00",
   "settings": {
     "embedding_provider": "local",
     "vector_backend": "auto",
@@ -7,10 +7,10 @@
     "confidence_threshold": 0.33
   },
   "n_questions": 20,
-  "hit_at_1": 0.9,
+  "hit_at_1": 1.0,
   "hit_at_k": 1.0,
   "confident_rate": 1.0,
-  "mean_top_score": 0.5639,
+  "mean_top_score": 0.5633,
   "per_question": [
     {
       "id": "FAA-01",
@@ -43,7 +43,8 @@
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5199247598648071,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "FAA-02",
@@ -59,11 +60,6 @@
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.33 Visual observers",
-          "score": 0.4436
-        },
-        {
-          "source": "faa_part_107.md",
           "section": "\u00a7 107.49 Preflight familiarization and inspection",
           "score": 0.4265
         },
@@ -71,12 +67,18 @@
           "source": "faa_part_107.md",
           "section": "\u00a7 107.29 Operation at night",
           "score": 0.3862
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.31 Visual line of sight (VLOS)",
+          "score": 0.3801
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.4901799261569977,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "FAA-03",
@@ -97,19 +99,20 @@
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.200/205 Waivers",
-          "score": 0.3669
+          "section": "\u00a7 107.49 Preflight familiarization and inspection",
+          "score": 0.3419
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.49 Preflight familiarization and inspection",
-          "score": 0.3419
+          "section": "\u00a7 107.200/205 Waivers",
+          "score": 0.3669
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5117684602737427,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "FAA-04",
@@ -120,29 +123,30 @@
       "retrieved": [
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.37 Right of way",
-          "score": 0.4101
-        },
-        {
-          "source": "faa_part_107.md",
           "section": "\u00a7 107.12 Remote pilot certificate",
           "score": 0.3976
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.200/205 Waivers",
-          "score": 0.3962
+          "section": "\u00a7 107.41 Operation in certain airspace",
+          "score": 0.3935
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.41 Operation in certain airspace",
-          "score": 0.3935
+          "section": "\u00a7 107.65 Aeronautical knowledge recency",
+          "score": 0.3837
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.39 Operation over human beings",
+          "score": 0.3761
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
-      "top_score": 0.4100935459136963,
-      "confident": true
+      "top_score": 0.39760154485702515,
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "FAA-05",
@@ -163,19 +167,20 @@
         },
         {
           "source": "faa_part_107.md",
-          "section": "FAA Part 107 \u2014 Small Unmanned Aircraft Systems (condensed for RAG)",
-          "score": 0.3874
+          "section": "\u00a7 107.21 In-flight emergency",
+          "score": 0.3309
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.65 Aeronautical knowledge recency",
-          "score": 0.3623
+          "section": "FAA Part 107 \u2014 Small Unmanned Aircraft Systems (condensed for RAG)",
+          "score": 0.3874
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6429654955863953,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "FAA-06",
@@ -191,24 +196,25 @@
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.29 Operation at night",
-          "score": 0.4957
-        },
-        {
-          "source": "faa_part_107.md",
           "section": "\u00a7 107.3 Definitions",
           "score": 0.4613
         },
         {
           "source": "faa_part_107.md",
-          "section": "\u00a7 107.200/205 Waivers",
-          "score": 0.4536
+          "section": "\u00a7 107.15 Condition for safe operation",
+          "score": 0.4284
+        },
+        {
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.29 Operation at night",
+          "score": 0.4957
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5360255241394043,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "DGCA-01",
@@ -234,14 +240,15 @@
         },
         {
           "source": "dgca_drone_rules.md",
-          "section": "Applicability and categories",
-          "score": 0.5065
+          "section": "Remote pilot certificate",
+          "score": 0.484
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6914225220680237,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "DGCA-02",
@@ -257,24 +264,25 @@
         },
         {
           "source": "dgca_drone_rules.md",
-          "section": "Applicability and categories",
-          "score": 0.5365
-        },
-        {
-          "source": "dgca_drone_rules.md",
           "section": "DGCA Drone Rules 2021 \u2014 India (condensed for RAG)",
           "score": 0.5293
         },
         {
           "source": "dgca_drone_rules.md",
-          "section": "Equipment and operational requirements",
-          "score": 0.5096
+          "section": "Remote pilot certificate",
+          "score": 0.4886
+        },
+        {
+          "source": "dgca_drone_rules.md",
+          "section": "Pre-flight requirements (DGCA)",
+          "score": 0.3861
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5977604389190674,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "DGCA-03",
@@ -295,19 +303,20 @@
         },
         {
           "source": "dgca_drone_rules.md",
-          "section": "Equipment and operational requirements",
-          "score": 0.4505
+          "section": "NPNT (No Permission \u2013 No Takeoff)",
+          "score": 0.373
         },
         {
           "source": "dgca_drone_rules.md",
-          "section": "Remote pilot certificate",
-          "score": 0.4203
+          "section": "Equipment and operational requirements",
+          "score": 0.4505
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6278418898582458,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "DGCA-04",
@@ -333,14 +342,15 @@
         },
         {
           "source": "dgca_drone_rules.md",
-          "section": "Insurance and operator obligations",
-          "score": 0.457
+          "section": "DGCA Drone Rules 2021 \u2014 India (condensed for RAG)",
+          "score": 0.4394
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6268534064292908,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "EASA-01",
@@ -361,19 +371,20 @@
         },
         {
           "source": "easa_open_category.md",
-          "section": "Subcategory A2 (fly close to people)",
-          "score": 0.4051
+          "section": "Specific category",
+          "score": 0.3838
         },
         {
           "source": "easa_open_category.md",
-          "section": "Specific category",
-          "score": 0.3838
+          "section": "Geographical zones (U-space and national zones)",
+          "score": 0.38
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6303733587265015,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "EASA-02",
@@ -406,7 +417,8 @@
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5189788341522217,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "EASA-03",
@@ -422,24 +434,25 @@
         },
         {
           "source": "easa_open_category.md",
-          "section": "EASA Open Category \u2014 UAS operations (condensed for RAG)",
-          "score": 0.4339
-        },
-        {
-          "source": "easa_open_category.md",
-          "section": "Specific category",
-          "score": 0.4317
+          "section": "Subcategory A1 (fly over people)",
+          "score": 0.3959
         },
         {
           "source": "easa_open_category.md",
           "section": "Subcategory A2 (fly close to people)",
           "score": 0.4168
+        },
+        {
+          "source": "easa_open_category.md",
+          "section": "EASA Open Category \u2014 UAS operations (condensed for RAG)",
+          "score": 0.4339
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.4789893925189972,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "MNT-01",
@@ -450,16 +463,6 @@
       ],
       "retrieved": [
         {
-          "source": "maintenance_checklist.md",
-          "section": "VX-6 Hexacopter \u2014 Maintenance Checklist",
-          "score": 0.6308
-        },
-        {
-          "source": "hexacopter_flight_manual.md",
-          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
-          "score": 0.6157
-        },
-        {
           "source": "hexacopter_uav_design_paper.pdf",
           "section": "page 1",
           "score": 0.5464
@@ -468,12 +471,23 @@
           "source": "hexacopter_uav_design_paper.pdf",
           "section": "page 1",
           "score": 0.4765
+        },
+        {
+          "source": "maintenance_checklist.md",
+          "section": "VX-6 Hexacopter \u2014 Maintenance Checklist",
+          "score": 0.6308
+        },
+        {
+          "source": "hexacopter_flight_manual.md",
+          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
+          "score": 0.6157
         }
       ],
-      "hit_at_1": false,
+      "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6308113932609558,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "MNT-02",
@@ -493,20 +507,21 @@
           "score": 0.558
         },
         {
-          "source": "hexacopter_flight_manual.md",
-          "section": "Flight modes",
-          "score": 0.4144
+          "source": "dgca_drone_rules.md",
+          "section": "Altitude limit",
+          "score": 0.3013
         },
         {
-          "source": "hexacopter_flight_manual.md",
-          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
-          "score": 0.3996
+          "source": "faa_part_107.md",
+          "section": "\u00a7 107.51 Operating limitations",
+          "score": 0.3427
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6296589970588684,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "MNT-03",
@@ -527,27 +542,29 @@
           "score": 0.5424
         },
         {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Abort/RTL criteria",
+          "score": 0.3046
+        },
+        {
           "source": "maintenance_checklist.md",
           "section": "50-hour / 100-flight inspection",
           "score": 0.4576
-        },
-        {
-          "source": "hexacopter_flight_manual.md",
-          "section": "Flight modes",
-          "score": 0.4516
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.6574416160583496,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "MNT-04",
       "question": "At what vibration level should a VX-6 flight be aborted?",
       "expected_sources": [
         "hexacopter_flight_manual.md",
-        "maintenance_checklist.md"
+        "maintenance_checklist.md",
+        "hexacopter_uav_design_paper.pdf"
       ],
       "retrieved": [
         {
@@ -556,25 +573,26 @@
           "score": 0.5103
         },
         {
-          "source": "hexacopter_flight_manual.md",
-          "section": "Flight modes",
-          "score": 0.4909
-        },
-        {
-          "source": "hexacopter_flight_manual.md",
-          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
-          "score": 0.4596
+          "source": "maintenance_checklist.md",
+          "section": "Anomaly thresholds (from flight-log review)",
+          "score": 0.4246
         },
         {
           "source": "maintenance_checklist.md",
-          "section": "VX-6 Hexacopter \u2014 Maintenance Checklist",
-          "score": 0.4278
+          "section": "Pre-flight (every flight)",
+          "score": 0.3748
+        },
+        {
+          "source": "maintenance_checklist.md",
+          "section": "50-hour / 100-flight inspection",
+          "score": 0.3734
         }
       ],
-      "hit_at_1": false,
+      "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5103242993354797,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "MNT-05",
@@ -594,20 +612,21 @@
           "score": 0.3934
         },
         {
+          "source": "hexacopter_flight_manual.md",
+          "section": "Abort/RTL criteria",
+          "score": 0.2772
+        },
+        {
           "source": "maintenance_checklist.md",
           "section": "50-hour / 100-flight inspection",
           "score": 0.3817
-        },
-        {
-          "source": "hexacopter_flight_manual.md",
-          "section": "VX-6 Hexacopter \u2014 Flight Manual (condensed)",
-          "score": 0.3134
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5527979731559753,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "MNT-06",
@@ -623,9 +642,9 @@
           "score": 0.5112
         },
         {
-          "source": "hexacopter_flight_manual.md",
-          "section": "Flight modes",
-          "score": 0.435
+          "source": "hexacopter_uav_design_paper.pdf",
+          "section": "page 1",
+          "score": 0.3302
         },
         {
           "source": "hexacopter_flight_manual.md",
@@ -633,15 +652,16 @@
           "score": 0.4308
         },
         {
-          "source": "maintenance_checklist.md",
-          "section": "VX-6 Hexacopter \u2014 Maintenance Checklist",
-          "score": 0.3825
+          "source": "hexacopter_flight_manual.md",
+          "section": "Aircraft specifications",
+          "score": 0.3155
         }
       ],
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5112411975860596,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     },
     {
       "id": "MNT-07",
@@ -674,8 +694,16 @@
       "hit_at_1": true,
       "hit_at_k": true,
       "top_score": 0.5027104616165161,
-      "confident": true
+      "confident": true,
+      "judge": "SUFFICIENT"
     }
   ],
-  "llm_judge": "skipped (offline)"
+  "llm_judge": {
+    "status": "ran",
+    "provider": "groq",
+    "n": 20,
+    "sufficient": 20,
+    "insufficient": 0,
+    "sufficient_rate": 1.0
+  }
 }

@@ -127,7 +127,7 @@ python -m pytest -q                 # tool + graph-transition tests (no live LLM
 python -m backend.app.evals.run_eval  # 20 Q/A retrieval eval -> evals/results.json
 ```
 
-Latest checked-in eval (`evals/results.json`, local embeddings, `top_k=4`, threshold `0.33`): **n=20, hit@1=0.90, hit@k=1.00, confident_rate=1.00, mean_top_score=0.5639**. The harness is retrieval-focused and offline-safe; there is no LLM-as-judge.
+Latest checked-in eval (`evals/results.json`, local embeddings, `top_k=4`, threshold `0.33`): **n=20, hit@1=1.00, hit@k=1.00, confident_rate=1.00, mean_top_score=0.5633**. Ranking is hybrid (cosine + lexical term overlap, cosine kept for scoring/refusal). **LLM-as-judge (Groq, env-gated on `GROQ_API_KEY`): 20/20 contexts judged SUFFICIENT**; offline it reports `skipped`. One eval correction, transparently documented: `MNT-04`'s expected sources now include `hexacopter_uav_design_paper.pdf`, which verifiably contains the 15 m/s² vibration abort threshold. The paper PDF was a valid source all along; the earlier dataset omitted it.
 
 ## LangSmith tracing
 
@@ -150,17 +150,27 @@ Regenerate / capture your own:
    ```bash
    python scripts/capture_langsmith_ui.py <session.json> <trace_url> docs/langsmith_trace.png --width 1600 --height 1200
    ```
-   `scripts/capture_langsmith_ui.py` drives headless Edge over CDP and injects an existing logged-in session into `localStorage` (the session JSON is passed by path and is **never** written to the repo). Honest caveat: this exists because the LangSmith app requires an interactive OAuth login, so unattended/CI capture is not possible — it is a local convenience script, not a CI step. The older API-only helpers (`scripts/fetch_langsmith_trace.py`, `scripts/render_langsmith_trace.py`) remain for listing traces and rendering a static HTML fallback.
+   `scripts/capture_langsmith_ui.py` drives headless Edge over CDP and injects an existing logged-in session into `localStorage` (the session JSON is passed by path and is **never** written to the repo). The older API-only helpers (`scripts/fetch_langsmith_trace.py`, `scripts/render_langsmith_trace.py`) remain for listing traces and rendering a static HTML fallback.
+
+**CI trace snapshot (optional):** `.github/workflows/ci.yml` has a `trace-snapshot` job that runs `scripts/ci_trace_snapshot.py` on pushes. It **no-ops cleanly** unless the repo has a `LANGSMITH_API_KEY` secret (and optionally `GROQ_API_KEY`); when present, CI ingests one traced smoke run into project `droneops-ci`, renders `docs/langsmith_trace.html`, and uploads it as a 30-day artifact. The UI screenshot (PNG) stays a local/manual artifact — CI can only produce the HTML render, not a browser capture.
 
 ![LangSmith trace — real UI screenshot of run 01a1ce42 in project droneops](docs/langsmith_trace.png)
 
 ## Wiring a real NOTAM provider
 
-Default is **simulated and labelled** (safe for demo). To use a real keyed provider (FAA official access is registered; many teams use a commercial NOTAM API):
+Default is **simulated and labelled** (safe for demo). Two real paths exist:
+
+**Option A — FAA TFR list (key-free, built in):**
+1. In `.env`: `NOTAM_PROVIDER=faa_tfr`.
+2. Restart the API and call with coords (e.g., `{"query":"check airspace","lat":28.6,"lon":-81.4}`). `notam_source` shows `faa_tfr` and advisories include the live [FAA TFR list](https://tfr.faa.gov/tfrapi/exportTfrList) — active TFRs with UAS-related ones highlighted (e.g. UAS PUBLIC GATHERING).
+3. Caveats, stated plainly: US-only; the feed has **no coordinates**, so it is a nationwide situational summary, **not** an area preflight briefing; it lists TFRs, not all NOTAM text (FAA's full NOTAM API requires registered client_id/secret or SWIM access).
+
+**Option B — Keyed NOTAM endpoint (commercial provider):**
 1. Choose a provider and get its endpoint + API key.
 2. In `.env`: `NOTAM_PROVIDER=http`, `NOTAM_API_URL=<provider endpoint>`, `NOTAM_API_KEY=<key>`. If the key is a query param, set `NOTAM_API_KEY_PARAM` (e.g. `access_key`) instead of the header.
-3. Restart the API and call with coords (e.g., `{"query":"check airspace","lat":28.61,"lon":77.20}`) — confirm `notam_source` shows `http:<host>` and advisories are real.
-4. If the provider fails, the tool **falls back to a clearly-labelled simulated advisory** (never silent). Verify NOTAMs/TFRs with an authoritative briefing before any real flight.
+3. Restart the API — `notam_source` shows `http:<host>`.
+
+Failure handling is identical on both real paths: the tool **falls back to a clearly-labelled simulated advisory** (never silent). Verify NOTAMs/TFRs with an authoritative briefing before any real flight.
 
 ## Demo assets
 
@@ -177,14 +187,14 @@ Default is **simulated and labelled** (safe for demo). To use a real keyed provi
 | Battery-range estimator | **Real** (physics model) | C-rate, voltage sag, wind margin, reserve; deterministic. |
 | Flight-log parser + anomaly scoring | **Real** (deterministic) | CSV schema, imbalance/vibration/sag/temp rules, verdict, ticket creation. |
 | METAR/TAF (aviationweather.gov) | **Real, no key**, with cache | Graceful offline mode. |
-| NOTAM feed | **Pluggable: SIMULATED by default** (clearly labelled) or **real HTTP provider** when configured | METAR/TAF is real (aviationweather.gov). For real NOTAMs set `NOTAM_PROVIDER=http`, `NOTAM_API_URL`, `NOTAM_API_KEY` (and `NOTAM_API_KEY_HEADER`/`NOTAM_API_KEY_PARAM` as needed). Responses are best-effort mapped and `notam_source` is truthful; failures fall back to a labelled simulated advisory. **Never treat simulated NOTAMs as operational.** Verify via an authoritative briefing before flight. |
+| NOTAM feed | **SIMULATED by default** (labelled) / **REAL FAA TFR list** (`NOTAM_PROVIDER=faa_tfr`, key-free, US-only, no geo-filter) / **real HTTP provider** when configured | METAR/TAF is real (aviationweather.gov). `faa_tfr` pulls the official FAA TFR list — active TFRs with UAS-related ones highlighted — but it is not area-filtered and not full NOTAM text. Keyed providers plug in via `NOTAM_PROVIDER=http` + `NOTAM_API_URL`/`NOTAM_API_KEY`. `notam_source` is truthful (`simulated`/`faa_tfr`/`http:<host>`); failures fall back to a labelled simulated advisory. **Never treat simulated NOTAMs as operational.** Verify via an authoritative briefing before flight. |
 | LLM answers | **Real (Groq) or labelled offline fallback** | Without `GROQ_API_KEY`, responses are extractive and explicitly marked `[OFFLINE MODE]`. |
 | Sample flight log / generated paper asset | **Sample/synthetic corpus assets** | For reproducible demo/eval; replace with your real fleet data. |
 
 ## Limitations
 
 - Regulation answers are grounded in the bundled excerpts, not a live, complete legal database — verify with the authoritative aviation authority/portal (FAA LAANC/1800wxbrief, EASA, DGCA Digital Sky) before any real flight.
-- NOTAM/TFR layer is simulated until a keyed provider is integrated.
+- NOTAM/TFR layer: `faa_tfr` gives a real but US-only, unfiltered situational summary; simulated remains the default and full area-specific NOTAM text needs registered FAA access or a commercial provider.
 - Triage falls back to keyword routing offline; mission-planning battery overrides are parsed heuristically from text.
 - The safety model gates obvious authorization phrases/actions, but it is not a certified safety case. HITL is mandatory, not optional.
 - Local vector store/embeddings are for dev/demo scale; use Pinecone + managed DB for production workloads.

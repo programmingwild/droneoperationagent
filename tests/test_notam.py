@@ -31,6 +31,29 @@ def test_online_metar_parsed(monkeypatch):
     assert all(n["source"] == "simulated" for n in report.simulated_notams)
 
 
+def test_online_no_stations_reports_ok_not_offline(monkeypatch):
+    """aviationweather.gov returns 204 No Content when no METAR station is in the bbox."""
+    seen = {}
+
+    def fake_get(url, params=None, timeout=None):
+        seen.update(params or {})
+        class Resp:
+            status_code = 204
+            text = ""
+
+            def raise_for_status(self):
+                pass
+
+        return Resp()
+
+    monkeypatch.setattr(notam.httpx, "get", fake_get)
+    report = notam.check_airspace(10.0, 20.0)
+    assert report.status == "ok"          # feed reachable, not "offline"
+    assert report.station_metar == []     # honestly empty, not an error
+    assert "No METAR stations reporting" in report.advisory
+    assert seen["bbox"] == "9.6000,19.6000,10.4000,20.4000"  # lat0,lon0,lat1,lon1
+
+
 def test_offline_no_cache_returns_safe_guidance(monkeypatch):
     def boom(*a, **k):
         raise httpx.ConnectError("no network")
