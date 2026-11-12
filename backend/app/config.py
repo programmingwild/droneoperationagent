@@ -14,16 +14,15 @@ class Settings(BaseSettings):
     )
 
     # --- LLM provider ---
-    openai_api_key: str | None = None
-    openai_model: str = "gpt-4o-mini"
-    # Groq exposes an OpenAI-compatible endpoint, so we reuse the same client.
+    # Groq exposes an OpenAI-compatible endpoint, so we reuse the ChatOpenAI client.
     groq_api_key: str | None = None
     groq_model: str = "openai/gpt-oss-120b"
     groq_base_url: str = "https://api.groq.com/openai/v1"
-    embedding_model: str = "text-embedding-3-small"
-    # auto = groq/openai when a key is present, else the explicit offline fallback
-    llm_provider: str = "auto"  # auto | openai | groq | local
-    embedding_provider: str = "auto"  # auto | openai | local
+    # Embeddings are local only (sentence-transformers all-MiniLM-L6-v2, 384 dims),
+    # fully offline — no external embedding API is used.
+    # auto = groq when a key is present, else the explicit offline fallback
+    llm_provider: str = "auto"  # auto | groq | local
+    embedding_provider: str = "local"  # local only
 
     # --- Vector store ---
     vector_backend: str = "auto"  # auto | pinecone | local
@@ -63,7 +62,7 @@ class Settings(BaseSettings):
     @field_validator("llm_provider", "embedding_provider", "vector_backend")
     @classmethod
     def _lower(cls, v: str) -> str:
-        return (v or "auto").lower().strip()
+        return (v or "local").lower().strip()
 
     @property
     def data_dir(self) -> Path:

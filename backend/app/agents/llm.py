@@ -1,6 +1,6 @@
 """LLM provider abstraction.
 
-Production: OpenAI or Groq via langchain-openai (Groq exposes an OpenAI-compatible API).
+Production: Groq via langchain-openai (Groq exposes an OpenAI-compatible API).
 Offline fallback: deterministic extractive composer (NOT a generative model) — clearly labelled in
 outputs as degraded, grounding answers only in retrieved chunks. No fabricated content.
 """
@@ -13,14 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_provider(settings: Settings | None = None) -> str:
-    """Resolve the effective chat provider: openai | groq | local."""
+    """Resolve the effective chat provider: groq | local."""
     s = settings or get_settings()
     provider = (s.llm_provider or "auto").lower().strip()
-    if provider in {"openai", "groq", "local"}:
+    if provider in {"groq", "local"}:
         return provider
-    # auto: prefer OpenAI (if credited), then Groq, then offline
-    if s.openai_api_key:
-        return "openai"
+    # auto: Groq when a key is present, else the explicit offline fallback
     if s.groq_api_key:
         return "groq"
     return "local"
@@ -29,8 +27,6 @@ def resolve_provider(settings: Settings | None = None) -> str:
 def llm_available() -> bool:
     s = get_settings()
     provider = resolve_provider(s)
-    if provider == "openai":
-        return bool(s.openai_api_key)
     if provider == "groq":
         return bool(s.groq_api_key)
     return False
@@ -42,18 +38,10 @@ def get_chat_model():
         return None
     from langchain_openai import ChatOpenAI
 
-    if resolve_provider(s) == "groq":
-        return ChatOpenAI(
-            model=s.groq_model,
-            api_key=s.groq_api_key,
-            base_url=s.groq_base_url,
-            temperature=0,
-            timeout=30,
-            max_retries=2,
-        )
     return ChatOpenAI(
-        model=s.openai_model,
-        api_key=s.openai_api_key,
+        model=s.groq_model,
+        api_key=s.groq_api_key,
+        base_url=s.groq_base_url,
         temperature=0,
         timeout=30,
         max_retries=2,
@@ -89,7 +77,7 @@ def grounded_answer(query: str, context: str, citations: list[dict]) -> str:
         "[OFFLINE MODE — no LLM API key configured: extractive answer from retrieved passages, "
         "not a generated response]\n\n"
         f"Most relevant evidence for your question:\n\n{top}\n\n"
-        "Set OPENAI_API_KEY or GROQ_API_KEY to enable full generative answers with citations."
+        "Set GROQ_API_KEY to enable full generative answers with citations."
     )
 
 

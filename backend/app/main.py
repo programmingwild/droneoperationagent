@@ -90,9 +90,7 @@ def health() -> HealthOut:
         doc_count = get_vector_store().count()
     except Exception:
         pass
-    embedding_provider = settings.embedding_provider
-    if embedding_provider == "auto":
-        embedding_provider = "openai" if settings.openai_api_key else "local"
+    embedding_provider = "local"
     vector_backend = settings.vector_backend
     if vector_backend == "auto":
         vector_backend = "pinecone" if settings.pinecone_api_key else "local"

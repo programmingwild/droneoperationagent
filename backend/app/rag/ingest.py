@@ -10,7 +10,6 @@ from pathlib import Path
 
 from ..config import REPO_ROOT, get_settings
 from .chunking import chunks_from_markdown, chunks_from_pdf_pages
-from .embeddings import _use_openai as _use_openai_emb
 from .embeddings import embed_texts
 from .vectorstore import get_vector_store
 
@@ -70,8 +69,7 @@ def ingest(reset: bool = False) -> dict:
         return {"ingested": 0, "backend": settings.vector_backend}
 
     texts = [c.text for c in chunks]
-    local = not _use_openai_emb()
-    vectors = embed_texts(texts, fit_local=local)
+    vectors = embed_texts(texts, fit_local=True)
     records = []
     for c, vec in zip(chunks, vectors):
         records.append({

@@ -1,4 +1,4 @@
-"""Retrieval evaluation harness (offline-safe; LLM judge only when OPENAI_API_KEY is set).
+"""Retrieval evaluation harness (offline-safe; no LLM judge).
 
 Run from repo root:  python -m backend.app.evals.run_eval
 Writes:              evals/results.json

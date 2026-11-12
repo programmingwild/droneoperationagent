@@ -45,8 +45,8 @@ flowchart LR
 ## Stack
 
 - Python 3.12, FastAPI, Pydantic v2
-- LangGraph (primary) + LangChain utilities; OpenAI (pluggable) with an **honest offline fallback** when no key is set
-- Embeddings: OpenAI `text-embedding-3-small` or local `sentence-transformers/all-MiniLM-L6-v2`
+- LangGraph (primary) + LangChain utilities; Groq (OpenAI-compatible API) with an **honest offline fallback** when no key is set
+- Embeddings: local `sentence-transformers/all-MiniLM-L6-v2` only (no external embedding API)
 - Vector store: **Pinecone** (serverless, cosine) or **local JSON+numpy** (`VECTOR_BACKEND=auto`)
 - Storage: SQLite by default; Postgres via `DATABASE_URL` (used in docker-compose)
 - Streamlit UI, Docker/Compose, GitHub Actions, AWS App Runner config (`apprunner.yaml`)
@@ -80,11 +80,11 @@ pip install -r requirements.txt
 
 copy .env.example .env   # Windows (or: cp .env.example .env) — add keys only in .env
 
-# Build the corpus + vector index (uses local embeddings if no OpenAI key)
+# Build the corpus + vector index (local embeddings)
 python -m backend.app.rag.ingest --reset
 ```
 
-**LLM provider.** Any one of: `OPENAI_API_KEY` (credited), or Groq's free tier (`GROQ_API_KEY` + `LLM_PROVIDER=groq`, OpenAI-compatible endpoint), or neither for labelled `[OFFLINE MODE]` extractive answers. Embeddings stay local (`EMBEDDING_PROVIDER=local`) so the checked-in 384-dim index remains valid — only the chat model changes.
+**LLM provider.** Groq (`GROQ_API_KEY` + `LLM_PROVIDER=auto|groq`, OpenAI-compatible endpoint) is the only chat provider — the stack no longer uses the OpenAI API anywhere. With no key, responses are labelled `[OFFLINE MODE]` extractive answers. Embeddings stay local (`EMBEDDING_PROVIDER=local`) so the checked-in 384-dim index remains valid.
 
 ## Run
 
@@ -127,7 +127,7 @@ python -m pytest -q                 # tool + graph-transition tests (no live LLM
 python -m backend.app.evals.run_eval  # 20 Q/A retrieval eval -> evals/results.json
 ```
 
-Latest checked-in eval (`evals/results.json`, local embeddings, `top_k=4`, threshold `0.33`): **n=20, hit@1=0.90, hit@k=1.00, confident_rate=1.00, mean_top_score=0.5639**. The harness is retrieval-focused and offline-safe; add an LLM-as-judge only when `OPENAI_API_KEY` is configured (env-gated, consistent with LangSmith tracing).
+Latest checked-in eval (`evals/results.json`, local embeddings, `top_k=4`, threshold `0.33`): **n=20, hit@1=0.90, hit@k=1.00, confident_rate=1.00, mean_top_score=0.5639**. The harness is retrieval-focused and offline-safe; there is no LLM-as-judge.
 
 ## LangSmith tracing
 
@@ -177,7 +177,7 @@ Default is **simulated and labelled** (safe for demo). To use a real keyed provi
 | Flight-log parser + anomaly scoring | **Real** (deterministic) | CSV schema, imbalance/vibration/sag/temp rules, verdict, ticket creation. |
 | METAR/TAF (aviationweather.gov) | **Real, no key**, with cache | Graceful offline mode. |
 | NOTAM feed | **Pluggable: SIMULATED by default** (clearly labelled) or **real HTTP provider** when configured | METAR/TAF is real (aviationweather.gov). For real NOTAMs set `NOTAM_PROVIDER=http`, `NOTAM_API_URL`, `NOTAM_API_KEY` (and `NOTAM_API_KEY_HEADER`/`NOTAM_API_KEY_PARAM` as needed). Responses are best-effort mapped and `notam_source` is truthful; failures fall back to a labelled simulated advisory. **Never treat simulated NOTAMs as operational.** Verify via an authoritative briefing before flight. |
-| LLM answers | **Real (OpenAI or Groq) or labelled offline fallback** | Without `OPENAI_API_KEY`/`GROQ_API_KEY`, responses are extractive and explicitly marked `[OFFLINE MODE]`. |
+| LLM answers | **Real (Groq) or labelled offline fallback** | Without `GROQ_API_KEY`, responses are extractive and explicitly marked `[OFFLINE MODE]`. |
 | Sample flight log / generated paper asset | **Sample/synthetic corpus assets** | For reproducible demo/eval; replace with your real fleet data. |
 
 ## Limitations

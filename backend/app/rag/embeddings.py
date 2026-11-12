@@ -1,31 +1,22 @@
 """Embedding providers.
 
-- openai : OpenAI embeddings (text-embedding-3-small, 1536 dims) — production path.
-- local  : sentence-transformers all-MiniLM-L6-v2 (384 dims) when installed — real semantic
-           embeddings, fully offline — else TF-IDF char/word fallback (data/local_embedder.pkl)
-           fitted at ingest time. Lexical TF-IDF is the last resort and is clearly documented.
+Local only — sentence-transformers all-MiniLM-L6-v2 (384 dims) when installed — real semantic
+embeddings, fully offline — else TF-IDF char/word fallback (data/local_embedder.pkl)
+fitted at ingest time. Lexical TF-IDF is the last resort and is clearly documented.
+No external embedding API is used (the bundled 384-dim index stays valid).
 """
 import pickle
 from pathlib import Path
 
 import numpy as np
 
-from ..config import REPO_ROOT, get_settings
+from ..config import REPO_ROOT
 
 LOCAL_ST_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 _ST_DIM = 384
 LOCAL_EMBEDDER_PATH = REPO_ROOT / "data" / "local_embedder.pkl"
 LOCAL_DIM = 30_000
 _st_model = None
-
-
-def _use_openai() -> bool:
-    settings = get_settings()
-    if settings.embedding_provider == "local":
-        return False
-    if settings.embedding_provider == "openai":
-        return True
-    return bool(settings.openai_api_key)
 
 
 def _st_available() -> bool:
@@ -42,8 +33,6 @@ def local_backend() -> str:
 
 
 def embedding_dimension() -> int:
-    if _use_openai():
-        return 1536
     return _ST_DIM if _st_available() else LOCAL_DIM
 
 
@@ -94,12 +83,6 @@ def _local_embed(texts: list[str], fit: bool = False) -> list[list[float]]:
 
 
 def embed_texts(texts: list[str], *, fit_local: bool = False) -> list[list[float]]:
-    if _use_openai():
-        from langchain_openai import OpenAIEmbeddings
-
-        settings = get_settings()
-        embedder = OpenAIEmbeddings(model=settings.embedding_model, api_key=settings.openai_api_key)
-        return [list(map(float, v)) for v in embedder.embed_documents(texts)]
     return _local_embed(texts, fit=fit_local)
 
 

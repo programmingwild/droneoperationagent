@@ -1,6 +1,6 @@
 # AWS App Runner (free tier / low cost) — build from source.
 # 1) Push repo to GitHub. 2) App Runner → Create service → Source: repository.
-# 3) Set env vars in the App Runner console: OPENAI_API_KEY, PINECONE_API_KEY, LANGSMITH_* (never commit).
+# 3) Set env vars in the App Runner console: GROQ_API_KEY, PINECONE_API_KEY, LANGSMITH_* (never commit).
 version: 1.0
 runtime: python312
 build:
@@ -18,7 +18,7 @@ run:
     - name: APP_ENV
       value: production
   secrets:
-    - name: OPENAI_API_KEY
-      value-from: "arn:aws:secretsmanager:REGION:ACCOUNT:secret:droneops/openai-api-key"
+    - name: GROQ_API_KEY
+      value-from: "arn:aws:secretsmanager:REGION:ACCOUNT:secret:droneops/groq-api-key"
     - name: PINECONE_API_KEY
       value-from: "arn:aws:secretsmanager:REGION:ACCOUNT:secret:droneops/pinecone-api-key"
