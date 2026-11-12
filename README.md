@@ -166,6 +166,7 @@ Default is **simulated and labelled** (safe for demo). To use a real keyed provi
 
 - `docs/demo.gif` — UI/demo capture
 - `docs/screenshot_approval_banner.jpeg` — HITL pending-approval banner
+- `docs/ui_chat.png` — mission-control chat view (hero, system status, quick prompts)
 
 ## Real vs simulated (honest)
 
