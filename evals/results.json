@@ -1,7 +1,7 @@
 {
-  "ran_at": "2026-11-08T14:33:55.868590+00:00",
+  "ran_at": "2026-11-12T05:30:39.596549+00:00",
   "settings": {
-    "embedding_provider": "auto",
+    "embedding_provider": "local",
     "vector_backend": "auto",
     "top_k": 4,
     "confidence_threshold": 0.33
