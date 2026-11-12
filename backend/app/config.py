@@ -16,9 +16,13 @@ class Settings(BaseSettings):
     # --- LLM provider ---
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
+    # Groq exposes an OpenAI-compatible endpoint, so we reuse the same client.
+    groq_api_key: str | None = None
+    groq_model: str = "llama-3.3-70b-versatile"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
     embedding_model: str = "text-embedding-3-small"
-    # auto = use openai when a key is present, else the explicit offline fallback
-    llm_provider: str = "auto"  # auto | openai | local
+    # auto = groq/openai when a key is present, else the explicit offline fallback
+    llm_provider: str = "auto"  # auto | openai | groq | local
     embedding_provider: str = "auto"  # auto | openai | local
 
     # --- Vector store ---

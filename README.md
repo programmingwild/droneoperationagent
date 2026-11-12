@@ -84,6 +84,8 @@ copy .env.example .env   # Windows (or: cp .env.example .env) — add keys only 
 python -m backend.app.rag.ingest --reset
 ```
 
+**LLM provider.** Any one of: `OPENAI_API_KEY` (credited), or Groq's free tier (`GROQ_API_KEY` + `LLM_PROVIDER=groq`, OpenAI-compatible endpoint), or neither for labelled `[OFFLINE MODE]` extractive answers. Embeddings stay local (`EMBEDDING_PROVIDER=local`) so the checked-in 384-dim index remains valid — only the chat model changes.
+
 ## Run
 
 **API (FastAPI):**
@@ -176,7 +178,7 @@ Default is **simulated and labelled** (safe for demo). To use a real keyed provi
 | Flight-log parser + anomaly scoring | **Real** (deterministic) | CSV schema, imbalance/vibration/sag/temp rules, verdict, ticket creation. |
 | METAR/TAF (aviationweather.gov) | **Real, no key**, with cache | Graceful offline mode. |
 | NOTAM feed | **Pluggable: SIMULATED by default** (clearly labelled) or **real HTTP provider** when configured | METAR/TAF is real (aviationweather.gov). For real NOTAMs set `NOTAM_PROVIDER=http`, `NOTAM_API_URL`, `NOTAM_API_KEY` (and `NOTAM_API_KEY_HEADER`/`NOTAM_API_KEY_PARAM` as needed). Responses are best-effort mapped and `notam_source` is truthful; failures fall back to a labelled simulated advisory. **Never treat simulated NOTAMs as operational.** Verify via an authoritative briefing before flight. |
-| LLM answers | **Real (OpenAI) or labelled offline fallback** | Without `OPENAI_API_KEY`, responses are extractive and explicitly marked `[OFFLINE MODE]`. |
+| LLM answers | **Real (OpenAI or Groq) or labelled offline fallback** | Without `OPENAI_API_KEY`/`GROQ_API_KEY`, responses are extractive and explicitly marked `[OFFLINE MODE]`. |
 | Sample flight log / generated paper asset | **Sample/synthetic corpus assets** | For reproducible demo/eval; replace with your real fleet data. |
 
 ## Limitations
