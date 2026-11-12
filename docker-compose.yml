@@ -41,6 +41,13 @@ services:
       DRONEOPS_API: http://api:8000
     depends_on:
       - api
+    # The image HEALTHCHECK probes the API on :8000; override it for Streamlit.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8501/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
 
 volumes:
   pgdata:
