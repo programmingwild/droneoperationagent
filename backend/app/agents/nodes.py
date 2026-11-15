@@ -26,6 +26,18 @@ def _trace(state: AgentState, msg: str) -> list[str]:
     return [*state.get("trace", []), f"{datetime.now(timezone.utc):%H:%M:%S} {msg}"]
 
 
+def _history_block(state: AgentState, max_turns: int = 8, max_chars: int = 300) -> str:
+    """Render prior turns as a compact transcript the model can reference."""
+    hist = state.get("history") or []
+    lines = []
+    for turn in hist[-max_turns:]:
+        role = str(turn.get("role", "user")).strip().lower()
+        content = " ".join(str(turn.get("content", "")).split())
+        if content:
+            lines.append(f"{role}: {content[:max_chars]}")
+    return "\n".join(lines)
+
+
 def _err(state: AgentState, msg: str) -> list[str]:
     logger.error("agent_node_error", extra={"error": msg, "run_id": state.get("run_id")})
     return [*state.get("errors", []), msg]
@@ -97,7 +109,7 @@ _KEYWORDS = {
 def triage_node(state: AgentState) -> AgentState:
     query = state["query"]
     trace = _trace(state, "triage: classifying query")
-    llm_result = triage_with_llm(query)
+    llm_result = triage_with_llm(query, _history_block(state))
     if llm_result:
         cls, conf = llm_result["classification"], float(llm_result["confidence"])
         trace = _trace({"trace": trace}, f"triage: llm route → {cls} ({conf:.2f})")
@@ -142,7 +154,7 @@ def mission_planning_node(state: AgentState) -> AgentState:
         estimate_block += "\n- Warnings:\n" + "\n".join(f"  - {w}" for w in est.warnings)
 
     context = format_context(retr)
-    body = grounded_answer(query, context, _format_citations(retr)) if retr.chunks else \
+    body = grounded_answer(query, context, _format_citations(retr), _history_block(state)) if retr.chunks else \
         "No manual excerpts retrieved — rely on the physics estimate only."
     answer = f"{retr_note}{estimate_block}\n\n{body}"
 
@@ -184,7 +196,7 @@ def regulation_node(state: AgentState) -> AgentState:
         }
 
     context = format_context(retr)
-    body = grounded_answer(query, context, _format_citations(retr))
+    body = grounded_answer(query, context, _format_citations(retr), _history_block(state))
     cite_lines = "\n".join(
         f"- [{i + 1}] {c.source} — {c.section}{' p.' + str(c.page) if c.page else ''} (score {c.score})"
         for i, c in enumerate(retr.citations)

@@ -12,6 +12,7 @@ class AgentState(TypedDict, total=False):
     log_file: str | None
     lat: float | None
     lon: float | None
+    history: list[dict[str, str]]  # prior user/assistant turns of this conversation
 
     # triage
     classification: Classification

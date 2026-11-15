@@ -56,15 +56,19 @@ def chat(system: str, user: str) -> str:
     return resp.content if isinstance(resp.content, str) else str(resp.content)
 
 
-def grounded_answer(query: str, context: str, citations: list[dict]) -> str:
+def grounded_answer(query: str, context: str, citations: list[dict], history: str = "") -> str:
     """Answer strictly from retrieved context. Falls back to labelled extractive mode offline."""
     system = (
         "You are Drone Ops Agent, a UAS fleet maintenance and mission-readiness expert. "
         "Answer ONLY using the numbered context passages. Cite them as [n]. "
         "If the context does not contain the answer, say so plainly and refuse to guess. "
-        "Never invent regulation section numbers, limits, or procedures."
+        "Never invent regulation section numbers, limits, or procedures. "
+        "For questions about regulations, limits or procedures, rely ONLY on the context passages and cite them. "
+        "For questions about what was said earlier in THIS conversation (tail numbers, names, "
+        "preferences, task context), answer from the prior conversation directly — that is the user's own data."
     )
-    user = f"Question: {query}\n\nContext:\n{context}\n\nAnswer with [n] citations."
+    preamble = f"Prior conversation (most recent at bottom):\n{history}\n\n" if history else ""
+    user = f"{preamble}Question: {query}\n\nContext:\n{context}\n\nAnswer with [n] citations."
     if llm_available():
         return chat(system, user)
     # Offline extractive fallback — quotes the top evidence instead of generating.
@@ -81,7 +85,7 @@ def grounded_answer(query: str, context: str, citations: list[dict]) -> str:
     )
 
 
-def triage_with_llm(query: str) -> dict[str, Any] | None:
+def triage_with_llm(query: str, history: str = "") -> dict[str, Any] | None:
     model = get_chat_model()
     if model is None:
         return None
@@ -93,6 +97,7 @@ def triage_with_llm(query: str) -> dict[str, Any] | None:
         confidence: float = Field(ge=0.0, le=1.0)
         reason: str
 
+    transcript = f"Prior conversation (most recent at bottom):\n{history}\n\n" if history else ""
     try:
         structured = model.with_structured_output(TriageResult)
         result = structured.invoke([
@@ -101,8 +106,9 @@ def triage_with_llm(query: str) -> dict[str, Any] | None:
              "mission_planning (flight planning, range, payload, go/no-go), "
              "maintenance (logs, tickets, wear, faults), "
              "regulation (legality, FAA/EASA/DGCA, airspace, approvals to fly), "
-             "anomaly (unexpected telemetry, suspected fault, incident triage)."),
-            ("human", query),
+             "anomaly (unexpected telemetry, suspected fault, incident triage). "
+             "Use the prior conversation to resolve references like 'it', 'that', 'the ticket'."),
+            ("human", transcript + f"Latest query: {query}"),
         ])
         return result.model_dump()
     except Exception as exc:  # provider or schema failure -> caller falls back to keywords

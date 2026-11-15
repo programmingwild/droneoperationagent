@@ -4,12 +4,19 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+class HistoryMessage(BaseModel):
+    role: str = Field(min_length=1, max_length=20)
+    content: str = Field(min_length=1, max_length=8000)
+
+
 class ChatRequest(BaseModel):
     query: str = Field(min_length=1, max_length=8000)
     thread_id: str | None = None
     log_file: str | None = Field(default=None, description="Path to a flight-log CSV for maintenance/anomaly runs")
     lat: float | None = Field(default=None, ge=-90, le=90)
     lon: float | None = Field(default=None, ge=-180, le=180)
+    history: list[HistoryMessage] = Field(default_factory=list, max_length=40,
+                                          description="Prior turns of THIS conversation (user/assistant) for memory")
 
 
 class ApproveRequest(BaseModel):

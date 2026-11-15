@@ -119,6 +119,7 @@ async def chat(req: ChatRequest):
         "log_file": req.log_file,
         "lat": req.lat,
         "lon": req.lon,
+        "history": [h.model_dump() for h in req.history],
         "trace": [f"run started ({run_id[:8]})"],
         "errors": [],
         "tool_results": {},

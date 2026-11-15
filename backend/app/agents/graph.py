@@ -61,10 +61,28 @@ def build_graph(checkpointer=None):
 
 
 def default_checkpointer():
+    settings = get_settings()
+    dsn = settings.database_url
+    # Production: durable Postgres checkpointer (same database as the audit trail).
+    if dsn.startswith(("postgresql://", "postgres://", "postgresql+psycopg2://")):
+        try:
+            import psycopg
+            from langgraph.checkpoint.postgres import PostgresSaver
+            from psycopg.rows import dict_row
+
+            saver = PostgresSaver(
+                psycopg.connect(dsn.replace("+psycopg2", ""), autocommit=True, row_factory=dict_row)
+            )
+            saver.setup()
+            return saver
+        except Exception as exc:
+            logger.warning("postgres_checkpointer_unavailable_fallback_sqlite",
+                           extra={"error": str(exc)[:200]})
+    # Dev/test: SQLite file checkpointer.
     try:
         from langgraph.checkpoint.sqlite import SqliteSaver
 
-        path = Path(get_settings().data_dir / "checkpoints.sqlite")
+        path = Path(settings.data_dir / "checkpoints.sqlite")
         conn = sqlite3.connect(str(path), check_same_thread=False)
         saver = SqliteSaver(conn)
         if hasattr(saver, "setup"):
