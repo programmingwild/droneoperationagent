@@ -58,12 +58,17 @@ st.markdown("""
 .brand .name { font-weight: 800; font-size: 1.15rem; letter-spacing: .02em; }
 .brand .sub  { color: #64748b; font-size: .72rem; }
 
-/* pending approval banner */
+/* pending approval banner — dark maroon alert, explicit colors for the dark theme */
 .hitl {
-  border: 2px solid #dc2626; background: #fef2f2; border-radius: 12px;
-  padding: .8rem 1rem; margin-bottom: .6rem;
+  border: 2px solid #ef4444; background: #2b0f12; border-radius: 12px;
+  padding: .8rem 1rem; margin-bottom: .6rem; color: #fde2e2;
 }
-.hitl h4 { margin: 0 0 .3rem 0; color: #b91c1c; }
+.hitl h4 { margin: 0 0 .3rem 0; color: #fca5a5; letter-spacing:.02em; }
+.hitl code {
+  background: #3b1216; color: #fda4a4; border: 1px solid #7f1d1d;
+  border-radius: 6px; padding: .1rem .35rem; font-size:.82rem;
+}
+.hitl b { color: #fecaca; }
 
 /* verdict banner (flight analysis) */
 .verdict { border-radius: 12px; padding: .7rem 1rem; margin: .3rem 0 .6rem 0; color:#fff; }
@@ -337,7 +342,7 @@ if "messages" not in st.session_state:
 
 # ------------------------------------------------------------------ tabs
 tab_chat, tab_tickets, tab_approvals, tab_logs, tab_runs = st.tabs(
-    ["💬 Chat", "🔧 Tickets", "🛡️ Approvals", "📄 Flight logs", "📈 Runs"])
+    ["Chat", "Tickets", "Approvals", "Flight logs", "Runs"])
 
 # ================================================================== CHAT
 with tab_chat:
