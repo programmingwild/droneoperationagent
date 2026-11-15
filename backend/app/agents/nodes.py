@@ -224,17 +224,55 @@ def _run_log_analysis(state: AgentState, log_path: str) -> AgentState:
         return _safe_tool_failure(state, "flight_log_analysis", exc)
 
     anomalies = analysis.anomalies
-    anomaly_lines = "\n".join(f"- [{a.severity}] {a.type}: {a.description}" for a in anomalies) or "- none"
+    verdict = (analysis.verdict or "").upper()
+    verdict_line = {
+        "GROUND": "🚫 **GROUNDED — do not fly**",
+        "MONITOR": "⚠️ **MONITOR — restricted operations only**",
+        "PASS": "✅ **PASS — no anomalies detected**",
+    }.get(verdict, f"**{verdict}**")
+
+    def _sev_icon(sev: str) -> str:
+        return {"HIGH": "🔴", "MEDIUM": "🟠", "LOW": "🟡"}.get((sev or "").upper(), "⚪")
+
+    sev_counts = {}
+    for a in anomalies:
+        sev_counts[(a.severity or "?").upper()] = sev_counts.get((a.severity or "?").upper(), 0) + 1
+    findings_head = (
+        f"**Findings ({len(anomalies)} — {', '.join(f'{v}x {k}' for k, v in sorted(sev_counts.items()))})**"
+        if anomalies else "**Findings**\n- none"
+    )
+    anomaly_lines = "\n".join(
+        f"- {_sev_icon(a.severity)} **{a.type}** — {a.description}" for a in anomalies
+    )
+
+    # Deterministic required-actions checklist, keyed off the actual finding types.
+    _ACTIONS = {
+        "MOTOR_CURRENT_IMBALANCE": "Motor current imbalance → inspect motor bearings/ESC and propeller condition on the flagged axis; run a 10-min hover check.",
+        "VIBRATION_EXCESSIVE": "Excessive vibration → check prop balance, motor mounts and IMU dampers; verify with a short tethered hover.",
+        "BATTERY_VOLTAGE_SAG": "Voltage sag → measure battery internal resistance, check connector/wiring, downsize payload or mission time.",
+        "MOTOR_TEMP": "Motor overtemp → check cooling airflow and motor load; verify bench temps after 5-min hover.",
+        "VOLTAGE_LOW": "Low voltage → swap to a fresh/charged pack and log IR before return to service.",
+    }
+    actions = []
+    for a in anomalies:
+        for key, action in _ACTIONS.items():
+            if key in (a.type or "").upper() and action not in actions:
+                actions.append(action)
+    if not actions:
+        actions.append("Review logged anomalies against the 50-hour / 100-flight checklist before next flight.")
+    action_lines = "\n".join(f"{i + 1}. {a}" for i, a in enumerate(actions))
+
     answer = (
-        f"**Flight-log analysis — {analysis.rows} rows over {analysis.duration_s}s**\n"
-        f"- Anomaly score: **{analysis.anomaly_score}/100** → verdict **{analysis.verdict}**\n"
-        f"- Motor current imbalance (% of 6-motor mean): {analysis.motor_current_imbalance_pct}\n"
-        f"- Max vibration {analysis.max_vibration_ms2} m/s² (RMS {analysis.vibration_rms_ms2})\n"
-        f"- Voltage min {analysis.voltage_min_v} V · sag {analysis.voltage_sag_v} V\n"
-        f"- Max motor temp {analysis.motor_temp_max_c} °C\n\n"
-        f"**Findings**\n{anomaly_lines}\n\n"
-        f"**Ticket opened: {ticket['id']}** (severity {ticket['severity']}, status {ticket['status']}). "
-        f"{ticket['recommended_action']}"
+        f"{verdict_line}\n"
+        f"Flight-log analysis · **{analysis.rows} rows** over **{analysis.duration_s:.1f} s** · anomaly score **{analysis.anomaly_score}/100**\n\n"
+        f"- Motor current imbalance (% of mean): {analysis.motor_current_imbalance_pct}\n"
+        f"- Max vibration **{analysis.max_vibration_ms2} m/s²** (RMS {analysis.vibration_rms_ms2})\n"
+        f"- Voltage min **{analysis.voltage_min_v} V** · sag **{analysis.voltage_sag_v} V**\n"
+        f"- Max motor temp **{analysis.motor_temp_max_c} °C**\n\n"
+        f"{findings_head}\n{anomaly_lines or '- none'}\n\n"
+        f"**Ticket {ticket['id']}** · severity **{ticket['severity']}** · status {ticket['status']}\n\n"
+        f"**Required before next flight**\n{action_lines}\n\n"
+        f"{ticket['recommended_action']} Technician sign-off required to clear."
     )
     return {
         "answer": answer,

@@ -64,6 +64,41 @@ st.markdown("""
   padding: .8rem 1rem; margin-bottom: .6rem;
 }
 .hitl h4 { margin: 0 0 .3rem 0; color: #b91c1c; }
+
+/* verdict banner (flight analysis) */
+.verdict { border-radius: 12px; padding: .7rem 1rem; margin: .3rem 0 .6rem 0; color:#fff; }
+.verdict h3 { margin: 0; font-size: 1.05rem; }
+.verdict small { opacity: .85; font-size: .78rem; }
+.v-ground  { background: linear-gradient(135deg,#7f1d1d,#dc2626); border:1px solid #fca5a5; }
+.v-monitor { background: linear-gradient(135deg,#78350f,#d97706); border:1px solid #fcd34d; }
+.v-pass    { background: linear-gradient(135deg,#14532d,#16a34a); border:1px solid #86efac; }
+
+/* stat tiles */
+.tiles { display:flex; gap:.5rem; flex-wrap:wrap; margin:.4rem 0 .6rem; }
+.tile { flex:1 1 120px; background:#0f1c30; border:1px solid #1e3a5f; border-radius:10px; padding:.45rem .6rem; text-align:center; }
+.tile .k { color:#7aa5d0; font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; }
+.tile .v { color:#f0f7ff; font-size:1.05rem; font-weight:800; }
+
+/* finding cards */
+.finding { display:flex; gap:.6rem; align-items:flex-start; border:1px solid #1e3a5f;
+           border-left:5px solid #64748b; border-radius:10px; padding:.5rem .7rem; margin:.35rem 0;
+           background:#0f1c30; }
+.f-high { border-left-color:#ef4444; }
+.f-medium { border-left-color:#f59e0b; }
+.f-low { border-left-color:#eab308; }
+.finding .icon { font-size:1.1rem; line-height:1.2; }
+.finding .type { font-weight:700; color:#f3f8ff; font-size:.85rem; }
+.finding .desc { color:#a8c0dd; font-size:.8rem; }
+.finding .mono { font-family:ui-monospace,Consolas,monospace; color:#67e8f9; font-size:.72rem; }
+
+/* actions checklist */
+.actions { border:1px dashed #155e75; border-radius:10px; padding:.5rem .8rem; background:rgba(34,211,238,.06); margin:.4rem 0; }
+.actions b { color:#67e8f9; }
+.actions ol { margin:.2rem 0 .1rem 1.1rem; padding:0; }
+.actions li { color:#c4dcf5; font-size:.82rem; margin:.15rem 0; }
+
+/* raw answer expander */
+.rawhint { color:#64748b; font-size:.72rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -116,6 +151,7 @@ def render_query(prompt: str):
     with st.chat_message("assistant"):
         status = st.status("Agent working…", expanded=True)
         final_answer, citations, trace = "", [], []
+        tool_results: dict = {}
         steps: list[str] = []
         for event in stream_chat(prompt):
             etype = event.get("type")
@@ -136,11 +172,18 @@ def render_query(prompt: str):
                 final_answer = event.get("answer", "")
                 citations = event.get("citations", [])
                 trace = event.get("trace", steps)
+                tool_results = event.get("tool_results") or {}
             elif etype == "error":
                 final_answer = (f"⚠️ Agent error: {event.get('error')}\n\n"
                                 f"{event.get('safe_default', 'Do not launch.')}")
         status.update(label="Agent finished", state="complete")
-        st.markdown(final_answer)
+        la = tool_results.get("log_analysis") if tool_results else None
+        if la:
+            render_flight_panel(la, (tool_results or {}).get("ticket"))
+            with st.expander("📄 Raw agent answer"):
+                st.markdown(final_answer)
+        else:
+            st.markdown(final_answer)
         if citations:
             with st.expander(f"📚 Sources ({len(citations)})", expanded=False):
                 for i, c in enumerate(citations, 1):
@@ -154,6 +197,68 @@ def render_query(prompt: str):
                 st.markdown(" → ".join(f"`{s}`" for s in trace))
     st.session_state.messages.append(("assistant", final_answer))
     return final_answer
+
+
+_VERA = {
+    "GROUND": ("🚫", "GROUNDED — DO NOT FLY", "v-ground"),
+    "MONITOR": ("⚠️", "MONITOR — RESTRICTED OPERATIONS", "v-monitor"),
+    "PASS": ("✅", "PASS — NO ANOMALIES", "v-pass"),
+}
+
+
+def render_flight_panel(la: dict, ticket: dict | None):
+    verdict = str(la.get("verdict", "")).upper()
+    icon, label, cls = _VERA.get(verdict, ("❓", verdict or "UNKNOWN", "v-monitor"))
+    st.markdown(
+        f'<div class="verdict {cls}"><h3>{icon} {label}</h3>'
+        f'<small>{la.get("rows", "?")} rows · {la.get("duration_s", 0):.1f}s · '
+        f'anomaly score {la.get("anomaly_score", "?")}/100</small></div>',
+        unsafe_allow_html=True)
+
+    anoms = la.get("anomalies", [])
+    hi = sum(1 for a in anoms if (a.get("severity") or "").upper() in {"HIGH", "CRITICAL"})
+    st.markdown(
+        '<div class="tiles">'
+        f'<div class="tile"><div class="k">Anomaly score</div><div class="v">{la.get("anomaly_score", "—")}/100</div></div>'
+        f'<div class="tile"><div class="k">Findings</div><div class="v">{len(anoms)} ({hi} high)</div></div>'
+        f'<div class="tile"><div class="k">Vib max</div><div class="v">{la.get("max_vibration_ms2", 0):.1f} m/s²</div></div>'
+        f'<div class="tile"><div class="k">Sag</div><div class="v">{la.get("voltage_sag_v", 0):.1f} V</div></div>'
+        f'<div class="tile"><div class="k">Temp max</div><div class="v">{la.get("motor_temp_max_c", 0):.0f} °C</div></div>'
+        "</div>",
+        unsafe_allow_html=True)
+
+    for a in anoms:
+        sev = (a.get("severity") or "").upper()
+        cls = {"HIGH": "f-high", "CRITICAL": "f-high", "MEDIUM": "f-medium", "LOW": "f-low"}.get(sev, "")
+        ico = {"HIGH": "🔴", "CRITICAL": "🔴", "MEDIUM": "🟠", "LOW": "🟡"}.get(sev, "⚪")
+        ev = a.get("evidence") or {}
+        ev_txt = " · ".join(f"{k}={v}" for k, v in list(ev.items())[:5])
+        st.markdown(
+            f'<div class="finding {cls}"><div class="icon">{ico}</div><div>'
+            f'<div class="type">[{sev}] {a.get("type", "")}</div>'
+            f'<div class="desc">{a.get("description", "")}</div>'
+            + (f'<div class="mono">{ev_txt}</div>' if ev_txt else "")
+            + "</div></div>",
+            unsafe_allow_html=True)
+
+    if ticket:
+        t_id = ticket.get("id", "?")
+        t_sev = (ticket.get("severity") or "?").upper()
+        st.markdown(
+            f'<div class="actions"><b>Ticket {t_id}</b> · severity <b>{t_sev}</b> · status {ticket.get("status")}<br/>'
+            "Aircraft is <b>grounded pending inspection</b>. Technician sign-off required before next flight.</div>",
+            unsafe_allow_html=True)
+        if st.button("📄 Export maintenance report (PDF)", key=f"panel-pdf-{t_id}"):
+            try:
+                r = httpx.post(f"{API}/report/{t_id}", timeout=30.0)
+                if r.status_code == 200:
+                    st.download_button("Download PDF", r.content,
+                                       file_name=f"{t_id}.pdf", mime="application/pdf",
+                                       key=f"panel-dl-{t_id}")
+                else:
+                    st.error(f"export failed: {r.text}")
+            except Exception as exc:
+                st.error(str(exc))
 
 
 def approval_banner(pending: dict):
@@ -277,6 +382,13 @@ with tab_tickets:
         tickets = []
     else:
         tickets = data.get("tickets", [])
+    if tickets:
+        open_n = sum(1 for t in tickets if (t.get("status") or "").upper() == "OPEN")
+        high_n = sum(1 for t in tickets if (t.get("severity") or "").upper() in {"HIGH", "CRITICAL"})
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Open", open_n)
+        c2.metric("High severity", high_n)
+        c3.metric("Total", len(tickets))
     if not tickets:
         st.info("No tickets yet — analyze a flight log from the **📄 Flight logs** tab to open one.")
     for t in tickets:

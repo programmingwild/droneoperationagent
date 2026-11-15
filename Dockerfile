@@ -24,6 +24,7 @@ RUN python scripts/make_sample_assets.py && python scripts/make_sample_paper.py 
     && python -m backend.app.rag.ingest --reset
 
 COPY frontend ./frontend
+COPY .streamlit ./.streamlit
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \

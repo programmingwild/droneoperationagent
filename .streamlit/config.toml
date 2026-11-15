@@ -1,0 +1,14 @@
+# Streamlit UI theme — dark "mission control" look
+[theme]
+base = "dark"
+primaryColor = "#22d3ee"
+backgroundColor = "#0b1220"
+secondaryBackgroundColor = "#131e33"
+textColor = "#dbe7f5"
+font = "sans serif"
+
+[client]
+showErrorDetails = false
+
+[browser]
+gatherUsageStats = false
