@@ -31,7 +31,7 @@ st.markdown("""
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 }
 
-.block-container { padding-top: 1.35rem; max-width: 1200px; }
+.block-container { padding-top: 4.35rem; max-width: 1200px; }
 
 .stApp {
   background:
