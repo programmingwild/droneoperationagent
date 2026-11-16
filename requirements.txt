@@ -1,4 +1,7 @@
 # Drone Ops Agent — Python 3.12
+# CPU-only torch from the pytorch index (small enough for free hosted tiers).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.2
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 pydantic>=2.7.0

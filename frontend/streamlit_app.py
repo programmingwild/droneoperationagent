@@ -6,12 +6,22 @@ Talks to the FastAPI agent at $DRONEOPS_API (default http://127.0.0.1:8000).
 import html as _html
 import json
 import os
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 import httpx
 import streamlit as st
 import streamlit.components.v1 as components
 
 API = os.environ.get("DRONEOPS_API", "http://127.0.0.1:8000")
+
+# Embedded mode: the whole agent runs in-process (Streamlit Community Cloud, single-process).
+# See frontend/embedded_api.py. The helpers below delegate to it when this is set.
+EMBEDDED = os.environ.get("EMBEDDED_API", "").strip().lower() in {"1", "true", "yes", "on"}
+
 
 st.set_page_config(page_title="Drone Ops Agent", page_icon="🛸", layout="wide",
                    initial_sidebar_state="expanded")
@@ -226,22 +236,52 @@ code, pre { font-family: var(--mono) !important; }
 
 # ------------------------------------------------------------------ helpers
 
+def _ensure_index():
+    """Embedded mode only: the corpus index lives on ephemeral disk; build once per boot."""
+    if (ROOT / "data" / "vector_store.json").exists():
+        return
+    from backend.app.rag.ingest import ingest
+    ingest(reset=True)
+
+
+if EMBEDDED:
+    _ensure_index()
+
+
 def api_get(path: str, timeout: float = 10.0):
-    try:
-        r = httpx.get(f"{API}{path}", timeout=timeout)
-        r.raise_for_status()
-        return r.json()
-    except Exception as exc:
-        return {"_error": str(exc)}
+    if not EMBEDDED:
+        try:
+            r = httpx.get(f"{API}{path}", timeout=timeout)
+            r.raise_for_status()
+            return r.json()
+        except Exception as exc:
+            return {"_error": str(exc)}
+    from embedded_api import api_get as _embedded_get
+    return _embedded_get(path, timeout)
 
 
 def api_post(path: str, payload: dict, timeout: float = 120.0):
-    try:
-        r = httpx.post(f"{API}{path}", json=payload, timeout=timeout)
-        r.raise_for_status()
-        return r.json()
-    except Exception as exc:
-        return {"_error": str(exc)}
+    if not EMBEDDED:
+        try:
+            r = httpx.post(f"{API}{path}", json=payload, timeout=timeout)
+            r.raise_for_status()
+            return r.json()
+        except Exception as exc:
+            return {"_error": str(exc)}
+    from embedded_api import api_post as _embedded_post
+    return _embedded_post(path, payload, timeout)
+
+
+def api_download(path: str):
+    """(status_code, content_bytes, filename) — uniform for HTTP and embedded mode."""
+    if not EMBEDDED:
+        try:
+            r = httpx.post(f"{API}{path}", timeout=30.0)
+            return r.status_code, r.content, f"{path.rsplit('/', 1)[-1]}.pdf"
+        except Exception as exc:
+            return 500, str(exc).encode("utf-8"), f"{path.rsplit('/', 1)[-1]}.txt"
+    from embedded_api import api_download as _embedded_download
+    return _embedded_download(path)
 
 
 def _history_payload(messages: list[dict], limit: int = 12) -> list[dict]:
@@ -252,17 +292,22 @@ def _history_payload(messages: list[dict], limit: int = 12) -> list[dict]:
 
 def stream_chat(query: str, log_file: str | None = None):
     """Yield parsed SSE events from POST /chat (includes session history for memory)."""
-    payload = {"query": query, "history": _history_payload(st.session_state.messages)}
-    if log_file:
-        payload["log_file"] = log_file
-    with httpx.stream("POST", f"{API}/chat", json=payload, timeout=300.0) as resp:
-        for line in resp.iter_lines():
-            if not line.startswith("data: "):
-                continue
-            try:
-                yield json.loads(line[6:])
-            except json.JSONDecodeError:
-                continue
+    if not EMBEDDED:
+        payload = {"query": query, "history": _history_payload(st.session_state.messages)}
+        if log_file:
+            payload["log_file"] = log_file
+        with httpx.stream("POST", f"{API}/chat", json=payload, timeout=300.0) as resp:
+            for line in resp.iter_lines():
+                if not line.startswith("data: "):
+                    continue
+                try:
+                    yield json.loads(line[6:])
+                except json.JSONDecodeError:
+                    continue
+    else:
+        from embedded_api import stream_chat as _embedded_stream
+
+        yield from _embedded_stream(query, log_file, _history_payload(st.session_state.messages))
 
 
 def severity_pill(sev: str) -> str:
@@ -336,16 +381,13 @@ def render_flight_panel(la: dict, ticket: dict | None):
             "Aircraft is <b>grounded pending inspection</b>. Technician sign-off required before next flight.</div>",
             unsafe_allow_html=True)
         if st.button("📄 Export report (PDF)", key=f"panel-pdf-{t_id}"):
-            try:
-                r = httpx.post(f"{API}/report/{t_id}", timeout=30.0)
-                if r.status_code == 200:
-                    st.download_button("Download PDF", r.content,
-                                       file_name=f"{t_id}.pdf", mime="application/pdf",
-                                       key=f"panel-dl-{t_id}")
-                else:
-                    st.error(f"export failed: {r.text}")
-            except Exception as exc:
-                st.error(str(exc))
+            code, content, fname = api_download(f"/report/{t_id}")
+            if code == 200:
+                st.download_button("Download PDF", content,
+                                   file_name=fname, mime="application/pdf",
+                                   key=f"panel-dl-{t_id}")
+            else:
+                st.error(content.decode("utf-8", "ignore"))
 
 
 def approval_banner(pending: dict):
@@ -633,16 +675,13 @@ elif st.session_state.nav == "tickets":
                     if f_.get("evidence"):
                         st.json(f_["evidence"], expanded=False)
             if st.button("📄 Export PDF", key=f"pdf-{t.get('id')}"):
-                try:
-                    r = httpx.post(f"{API}/report/{t.get('id')}", timeout=30.0)
-                    if r.status_code == 200:
-                        st.download_button("Download PDF", r.content,
-                                           file_name=f"{t.get('id')}.pdf",
-                                           mime="application/pdf", key=f"dl-{t.get('id')}")
-                    else:
-                        st.error(f"export failed: {r.text}")
-                except Exception as exc:
-                    st.error(str(exc))
+                code, content, fname = api_download(f"/report/{t.get('id')}")
+                if code == 200:
+                    st.download_button("Download PDF", content,
+                                       file_name=fname,
+                                       mime="application/pdf", key=f"dl-{t.get('id')}")
+                else:
+                    st.error(content.decode("utf-8", "ignore"))
 
 # ================================================================== APPROVALS
 elif st.session_state.nav == "approvals":

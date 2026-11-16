@@ -106,6 +106,24 @@ copy .env.example .env   # set secrets in .env (never commit)
 docker compose up --build
 # UI http://localhost:8501  |  API http://localhost:8000  |  Postgres internal
 ```
+
+## Deploy to Streamlit Community Cloud
+
+The repo also runs in **embedded mode**: the UI calls the agent *in-process* (no FastAPI server, no Postgres — SQLite in `data/droneops.db`), which is the only way a single free Streamlit app can host the whole thing. The Docker deployment above is still the reference production stack; embedded mode trades persistence and the separate API surface for a zero-cost public demo.
+
+**Steps:**
+1. Sign in at <https://share.streamlit.io> with GitHub → **New app** → pick `programmingwild/droneoperationagent`.
+2. **Main file path:** `frontend/streamlit_app.py` · **Python version:** 3.12 (select in Advanced settings).
+3. **App secrets** (Settings → Secrets): paste this, no real values in the repo:
+   ```toml
+   GROQ_API_KEY = "gsk_..."
+   EMBEDDED_API = "1"
+   # optional: LANGSMITH_API_KEY = "lsv2_...", LANGSMITH_TRACING = "true"
+   ```
+4. Deploy. The first request ingests the corpus into an ephemeral local store (`data/vector_store.json`, NumPy cosine) — ~35 s one-time; redeploys lose it and it rebuilds.
+5. You get a public URL (`https://<app-name>.streamlit.app`) — share it for demos.
+
+**Limits (honest):** free tier only; **public** (no auth — anyone can reach it, including `/approve`); ~1 GB RAM / 1 CPU, CPU-only torch; sleeps after ~12 h idle; SQLite is wiped on redeploy and sleeps are lossy; no custom domain; `"Embedded mode"` reporting differs from Docker (`vector_backend` still reports `local`; `"app_env": "development"`). If you need persistence and the real API surface, use the Docker Compose deployment on a $0–$7 host instead.
 **Docker setup (Windows):** install [Docker Desktop](https://www.docker.com/products/docker-desktop/), enable WSL2 backend if prompted, start Docker Desktop, then run the commands above from the repo root. Compose runs Postgres for the API; the image bakes the corpus + embeddings for an offline cold start. *Docker isn’t installed in this dev environment, so run/verify this on your Docker-enabled machine.*
 
 ## API
