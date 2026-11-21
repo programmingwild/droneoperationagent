@@ -429,6 +429,11 @@ st.markdown(
     '<span class="mtop-status">DECISION SUPPORT</span></div>',
     unsafe_allow_html=True)
 
+# v3 visual system lives in its own stylesheet; loaded last so it wins.
+_CSS_V3 = Path(__file__).parent / "styles" / "v3.css"
+if _CSS_V3.exists():
+    st.markdown(f"<style>{_CSS_V3.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+
 # ------------------------------------------------------------------ helpers
 
 def _ensure_index():
@@ -796,10 +801,20 @@ with st.sidebar:
 # ================================================================== CHAT
 if st.session_state.nav == "chat":
     if not st.session_state.messages:
-        st.markdown(f'<div class="empty-wrap"><div class="empty-glyph">{_ico("drone", 52)}</div>'
-                    '<div class="empty-title">How can I help with your fleet today?</div>'
-                    '<div class="empty-sub">Grounded answers · cited sources · human-approved authorizations</div></div>',
-                    unsafe_allow_html=True)
+        docs = health.get("vector_store_docs", "—")
+        llm_state = "Groq online" if health.get("llm_available") else "Offline mode"
+        st.markdown(
+            f'<div class="hero">'
+            '<div class="hero-eyebrow"><span class="live-dot"></span> UAV fleet intelligence · decision support</div>'
+            f'<div class="hero-glyph">{_ico("drone", 38)}</div>'
+            '<div class="hero-title">How can I help<br/>with your fleet today?</div>'
+            '<div class="hero-sub">Grounded answers, cited sources, and human-approved '
+            'authorizations — in one mission-control workspace.</div>'
+            '<div class="hero-meta">'
+            f'<span>{_html.escape(str(docs))} documents indexed</span>'
+            f'<span>{llm_state}</span>'
+            '<span>Human approval enforced</span></div></div>',
+            unsafe_allow_html=True)
         cols = st.columns(2)
         suggestions = [
             ("Legality check", "Is flying over people legal under Part 107?"),
