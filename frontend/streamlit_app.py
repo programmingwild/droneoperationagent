@@ -456,7 +456,7 @@ _VERA = {
 
 def render_flight_panel(la: dict, ticket: dict | None):
     verdict = str(la.get("verdict", "")).upper()
-    icon, label, cls = _VERA.get(verdict, ("❓", verdict or "UNKNOWN", "v-monitor"))
+    icon, label, cls = _VERA.get(verdict, ("alert-triangle", verdict or "UNKNOWN", "v-monitor"))
     st.markdown(
         f'<div class="verdict {cls}"><h3>{_ico(icon, 20)} {label}</h3>'
         f'<small>{la.get("rows", "?")} rows · {la.get("duration_s", 0):.1f}s · '
@@ -507,31 +507,38 @@ def render_flight_panel(la: dict, ticket: dict | None):
                 st.error(content.decode("utf-8", "ignore"))
 
 
-def approval_banner(pending: dict):
+def _decide_approval(pending: dict, approved: bool):
+    """Record the HITL decision, append the resumed answer, and close the dialog."""
+    res = api_post("/approve", {"approval_id": pending["id"], "approved": approved,
+                                "decided_by": "streamlit-operator"})
+    decision = "APPROVED" if approved else "REJECTED"
+    if "_error" in res:
+        answer = f"Approval failed safe: {res['_error']}"
+    else:
+        answer = res.get("answer") or f"Authorization {decision}."
+    st.session_state.messages.append({"role": "assistant", "text": answer})
+    st.session_state.pop("pending_approval", None)
+    st.rerun()
+
+
+@st.dialog("Human approval required")
+def approval_dialog(pending: dict):
+    """Modal popup: an authorization request must never hide above the fold."""
     st.markdown(
-        '<div class="hitl"><h4>Pending human approval</h4>'
-        f'Action: <b>{pending.get("action")}</b> · approval <code>{pending.get("id")}</code>'
-        "</div>",
+        f'<div class="hitl">{_ico("alert-triangle", 20)} <b>Human approval required</b><br/>'
+        f'Action: <b>{_html.escape(str(pending.get("action") or "authorization"))}</b> · '
+        f'approval <code>{_html.escape(str(pending.get("id") or ""))}</code></div>',
         unsafe_allow_html=True)
+    st.caption("Nothing launches until you decide — this is a safety control, not a suggestion.")
     with st.container(border=True):
-        st.markdown(pending.get("summary", ""))
-        c1, c2, _ = st.columns([1, 1, 4])
-        with c1:
-            if st.button("Approve", type="primary", use_container_width=True):
-                res = api_post("/approve", {"approval_id": pending["id"], "approved": True,
-                                            "decided_by": "streamlit-operator"})
-                st.session_state.messages.append(
-                    {"role": "assistant", "text": res.get("answer", json.dumps(res))})
-                st.session_state.pop("pending_approval", None)
-                st.rerun()
-        with c2:
-            if st.button("Reject", use_container_width=True):
-                res = api_post("/approve", {"approval_id": pending["id"], "approved": False,
-                                            "decided_by": "streamlit-operator"})
-                st.session_state.messages.append(
-                    {"role": "assistant", "text": res.get("answer", json.dumps(res))})
-                st.session_state.pop("pending_approval", None)
-                st.rerun()
+        st.markdown(pending.get("summary") or "No summary provided.")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Approve", type="primary", use_container_width=True, key="dlg-approve"):
+            _decide_approval(pending, True)
+    with c2:
+        if st.button("Reject", use_container_width=True, key="dlg-reject"):
+            _decide_approval(pending, False)
 
 
 def _append_assistant_turn(answer: str, panel: dict | None = None, citations: list | None = None,
@@ -707,9 +714,6 @@ with st.sidebar:
 
 # ================================================================== CHAT
 if st.session_state.nav == "chat":
-    if st.session_state.get("pending_approval"):
-        approval_banner(st.session_state.pending_approval)
-
     if not st.session_state.messages:
         st.markdown(f'<div class="empty-wrap"><div class="empty-glyph">{_ico("drone", 52)}</div>'
                     '<div class="empty-title">How can I help with your fleet today?</div>'
@@ -746,7 +750,7 @@ if st.session_state.nav == "chat":
                         st.session_state.pop("editing", None)
                         st.rerun()
                 else:
-                    if st.button("", key=f"edit-btn-{i}", help="Edit and resend"):
+                    if st.button("Edit", key=f"edit-btn-{i}", help="Edit and resend"):
                         st.session_state.editing = i
                         st.rerun()
 
@@ -866,3 +870,9 @@ elif st.session_state.nav == "runs":
             c1.caption(f"{r.get('started_at', '')} · run `{r.get('id', '')[:12]}`")
             c2.markdown(f'<span class="pill pill-info">{r.get("classification") or "?"}</span>',
                         unsafe_allow_html=True)
+
+# ============================================================ HITL MODAL (popup)
+# Rendered last so the authorization decision is always centred on screen,
+# never scrolled above the conversation under a sticky header.
+if st.session_state.get("pending_approval"):
+    approval_dialog(st.session_state.pending_approval)
