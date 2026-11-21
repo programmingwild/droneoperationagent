@@ -78,10 +78,10 @@ def grounded_answer(query: str, context: str, citations: list[dict], history: st
         excerpts.append(block.strip())
     top = "\n".join(excerpts[:2])
     return (
-        "[OFFLINE MODE — no LLM API key configured: extractive answer from retrieved passages, "
-        "not a generated response]\n\n"
-        f"Most relevant evidence for your question:\n\n{top}\n\n"
-        "Set GROQ_API_KEY to enable full generative answers with citations."
+        "Offline mode — no LLM key configured, so this is an extract of the relevant "
+        "passages, not a generated answer.\n\n"
+        f"Most relevant evidence:\n\n{top}\n\n"
+        "Set GROQ_API_KEY to enable generated answers with citations."
     )
 
 

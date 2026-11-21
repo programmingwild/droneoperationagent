@@ -140,7 +140,7 @@ def mission_planning_node(state: AgentState) -> AgentState:
     except Exception as exc:
         return _safe_tool_failure(state, "rag_retrieve", exc)
 
-    retr_note = "" if retr.confident else "\n⚠ Retrieval confidence below threshold — guidance unverified.\n"
+    retr_note = "" if retr.confident else "\nNote: retrieval confidence below threshold — guidance unverified.\n"
     estimate_block = (
         f"**Battery-range estimate (physics model)**\n"
         f"- Nominal {est.nominal_voltage_v} V · full {est.full_voltage_v} V · loaded cutoff {est.cutoff_voltage_v} V\n"
@@ -214,7 +214,7 @@ def regulation_node(state: AgentState) -> AgentState:
             trace = _trace({"trace": trace}, f"regulation: airspace proxy → {report.status}")
         except Exception as exc:
             tool_results["airspace"] = {"status": "error", "error": str(exc)}
-            answer += "\n\n⚠ Live airspace check failed; treat conditions as unverified."
+            answer += "\n\nNote: live airspace check failed; treat conditions as unverified."
 
     return {
         "answer": answer,
@@ -238,13 +238,23 @@ def _run_log_analysis(state: AgentState, log_path: str) -> AgentState:
     anomalies = analysis.anomalies
     verdict = (analysis.verdict or "").upper()
     verdict_line = {
-        "GROUND": "🚫 **GROUNDED — do not fly**",
-        "MONITOR": "⚠️ **MONITOR — restricted operations only**",
-        "PASS": "✅ **PASS — no anomalies detected**",
+        "GROUND": "**GROUNDED — do not fly**",
+        "MONITOR": "**MONITOR — restricted operations only**",
+        "PASS": "**PASS — no anomalies detected**",
     }.get(verdict, f"**{verdict}**")
 
-    def _sev_icon(sev: str) -> str:
-        return {"HIGH": "🔴", "MEDIUM": "🟠", "LOW": "🟡"}.get((sev or "").upper(), "⚪")
+    _TYPE_LABELS = {
+        "MOTOR_CURRENT_IMBALANCE": "Motor current imbalance",
+        "VIBRATION_EXCESSIVE": "Excessive vibration",
+        "BATTERY_VOLTAGE_SAG": "Battery voltage sag",
+        "MOTOR_TEMP": "Motor overheat",
+        "MOTOR_OVERHEAT": "Motor overheat",
+        "VOLTAGE_LOW": "Low pack voltage",
+    }
+
+    def _type_label(value: str) -> str:
+        key = (value or "").upper()
+        return _TYPE_LABELS.get(key, key.replace("_", " ").capitalize() if key else "Finding")
 
     sev_counts = {}
     for a in anomalies:
@@ -254,7 +264,8 @@ def _run_log_analysis(state: AgentState, log_path: str) -> AgentState:
         if anomalies else "**Findings**\n- none"
     )
     anomaly_lines = "\n".join(
-        f"- {_sev_icon(a.severity)} **{a.type}** — {a.description}" for a in anomalies
+        f"- **{_type_label(a.type)}** ({(a.severity or '').upper()}) — {a.description}"
+        for a in anomalies
     )
 
     # Deterministic required-actions checklist, keyed off the actual finding types.
@@ -350,7 +361,7 @@ def safety_supervisor_node(state: AgentState) -> AgentState:
             # Fail-safe: authorization must never proceed without a durable approval record
             return {
                 "answer": (state.get("answer", "") +
-                           "\n\n⛔ Authorization BLOCKED: could not persist the approval record — "
+                           "\n\nAuthorization BLOCKED: could not persist the approval record — "
                            "failing safe. Do NOT take off."),
                 "recommended_action": "HOLD",
                 "requires_approval": False,

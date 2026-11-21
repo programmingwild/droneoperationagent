@@ -70,8 +70,44 @@ _FRIENDLY = {
     "PENDING": "Pending",
     "APPROVED": "Approved",
     "REJECTED": "Rejected",
+    # Flight-log finding types.
+    "MOTOR_CURRENT_IMBALANCE": "Motor current imbalance",
+    "VIBRATION_EXCESSIVE": "Excessive vibration",
+    "BATTERY_VOLTAGE_SAG": "Battery voltage sag",
+    "MOTOR_OVERHEAT": "Motor overheat",
+    "VOLTAGE_LOW": "Low pack voltage",
+    "OPEN": "Open",
+    "CLOSED": "Closed",
 }
 _ACRONYMS = {"RPA", "UAS", "VTOL", "FAA", "EASA", "DGCA", "NOTAM", "METAR", "TAF", "HITL", "PDF", "ID"}
+
+# Raw evidence keys from the flight-log tool -> readable labels + units.
+_EVIDENCE_LABELS = {
+    "motor": "Motor", "imbalance_pct": "Imbalance", "sustained_s": "Sustained",
+    "max_ms2": "Peak", "rms_ms2": "RMS", "seconds_over": "Above limit",
+    "baseline_v": "Fresh baseline", "min_v": "Minimum", "sag_v": "Sag",
+    "max_temp_c": "Peak temperature", "avg_temp_c": "Average temperature",
+    "current_a": "Current", "voltage_v": "Voltage",
+}
+_EVIDENCE_UNITS = {
+    "imbalance_pct": "%", "sustained_s": " s", "max_ms2": " m/s²", "rms_ms2": " m/s²",
+    "seconds_over": " s", "baseline_v": " V", "min_v": " V", "sag_v": " V",
+    "max_temp_c": " °C", "avg_temp_c": " °C", "current_a": " A", "voltage_v": " V",
+}
+
+
+def _fmt_evidence(key: str, value) -> str:
+    """Format one raw evidence pair as a human-readable phrase."""
+    label = _EVIDENCE_LABELS.get(key, _friendly(key))
+    unit = _EVIDENCE_UNITS.get(key, "")
+    if isinstance(value, list):
+        body = ", ".join(f"{x:.1f}{unit}" if isinstance(x, (int, float)) else str(x)
+                         for x in value)
+    elif isinstance(value, (int, float)):
+        body = f"{value:.1f}{unit}" if isinstance(value, float) else f"{value}{unit}"
+    else:
+        body = str(value)
+    return f"{label}: {body}"
 
 
 def _friendly(value, default: str = "—") -> str:
@@ -525,12 +561,12 @@ def render_flight_panel(la: dict, ticket: dict | None):
         dot = {"HIGH": "sev-high", "CRITICAL": "sev-high", "MEDIUM": "sev-medium",
                "LOW": "sev-low"}.get(sev, "sev-none")
         ev = a.get("evidence") or {}
-        ev_txt = " · ".join(f"{k}={v}" for k, v in list(ev.items())[:5])
+        ev_txt = " · ".join(_fmt_evidence(k, v) for k, v in list(ev.items())[:6])
         st.markdown(
             f'<div class="finding {cls}"><div class="icon"><span class="sev-dot {dot}"></span></div><div>'
-            f'<div class="type">[{sev}] {a.get("type", "")}</div>'
-            f'<div class="desc">{a.get("description", "")}</div>'
-            + (f'<div class="mono">{ev_txt}</div>' if ev_txt else "")
+            f'<div class="type">{_html.escape(_friendly(a.get("type"), "Finding"))}</div>'
+            f'<div class="desc">{_html.escape(str(a.get("description", "")))}</div>'
+            + (f'<div class="mono">{_html.escape(ev_txt)}</div>' if ev_txt else "")
             + "</div></div>",
             unsafe_allow_html=True)
 
@@ -538,7 +574,8 @@ def render_flight_panel(la: dict, ticket: dict | None):
         t_id = ticket.get("id", "?")
         t_sev = (ticket.get("severity") or "?").upper()
         st.markdown(
-            f'<div class="actions"><b>Ticket {t_id}</b> · severity <b>{t_sev}</b> · status {ticket.get("status")}<br/>'
+            f'<div class="actions"><b>Ticket {t_id}</b> · severity <b>{_html.escape(_friendly(t_sev))}</b>'
+            f' · status {_html.escape(_friendly(ticket.get("status")))}<br/>'
             "Aircraft is <b>grounded pending inspection</b>. Technician sign-off required before next flight.</div>",
             unsafe_allow_html=True)
         if st.button("Export report (PDF)", key=f"panel-pdf-{t_id}"):
@@ -614,7 +651,7 @@ def render_message(m: dict, index: int):
                     unsafe_allow_html=True)
     if m.get("trace"):
         with st.expander("Agent trace"):
-            st.markdown(" → ".join(f"`{s}`" for s in m["trace"]))
+            st.markdown(" → ".join(f"{_friendly(s)}" for s in m["trace"]))
 
     c1, c2, _ = st.columns([1.4, 1.4, 8])
     with c1:
@@ -648,7 +685,7 @@ def handle_query(prompt: str, show_user: bool = True):
         etype = event.get("type")
         if etype == "node":
             steps.append(event.get("node"))
-            status.write(f"▸ {event.get('node')} ▌")
+            status.write(f"▸ {_friendly(event.get('node'))} ▌")
         elif etype == "approval_required":
             st.session_state.pending_approval = {
                 "id": event.get("approval_id"),

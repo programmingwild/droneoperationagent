@@ -90,5 +90,5 @@ def format_context(result: RetrievalResult) -> str:
     for i, h in enumerate(result.chunks, 1):
         md = h.get("metadata", {})
         loc = f"p.{md.get('page')}" if md.get("page") else md.get("section", "?")
-        lines.append(f"[{i}] (source={md.get('source')}, section={loc})\n{h.get('text', '')}")
+        lines.append(f"[{i}] {md.get('source')} — {loc}\n{h.get('text', '')}")
     return "\n\n".join(lines)
