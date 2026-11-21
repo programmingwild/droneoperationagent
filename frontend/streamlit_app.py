@@ -43,84 +43,11 @@ def _ico(name: str, size: int = 18, cls: str = "") -> str:
             f'stroke-linejoin="round">{_ICON_PATHS.get(name, _ICON_PATHS["drone"])}</svg></span>')
 
 
-# Backend enums are UPPER_SNAKE_CASE; never show that raw in the UI.
-_FRIENDLY = {
-    "TAKEOFF_AUTHORIZATION": "Takeoff authorization",
-    "RPA_ARM": "RPA arming",
-    "TAKEOFF": "Takeoff",
-    "ARM": "Arming",
-    "INSPECT": "Inspection required",
-    "HOLD": "Hold — do not launch",
-    "GROUND": "Grounded",
-    "MONITOR": "Restricted operations",
-    "PASS": "No anomalies",
-    "TRIAGE": "Triage",
-    "MISSION_PLANNING": "Mission planning",
-    "MAINTENANCE": "Maintenance",
-    "REGULATION": "Regulation compliance",
-    "ANOMALY": "Anomaly detection",
-    "SAFETY_SUPERVISOR": "Safety supervisor",
-    "HUMAN_APPROVAL": "Human approval",
-    "FINALIZE": "Finalize",
-    "COMPLETED": "Completed",
-    "AWAITING_APPROVAL": "Awaiting approval",
-    "APPROVAL_REQUIRED": "Approval required",
-    "PAUSED": "Paused",
-    "ERROR": "Error",
-    "PENDING": "Pending",
-    "APPROVED": "Approved",
-    "REJECTED": "Rejected",
-    # Flight-log finding types.
-    "MOTOR_CURRENT_IMBALANCE": "Motor current imbalance",
-    "VIBRATION_EXCESSIVE": "Excessive vibration",
-    "BATTERY_VOLTAGE_SAG": "Battery voltage sag",
-    "MOTOR_OVERHEAT": "Motor overheat",
-    "VOLTAGE_LOW": "Low pack voltage",
-    "OPEN": "Open",
-    "CLOSED": "Closed",
-}
-_ACRONYMS = {"RPA", "UAS", "VTOL", "FAA", "EASA", "DGCA", "NOTAM", "METAR", "TAF", "HITL", "PDF", "ID"}
-
-# Raw evidence keys from the flight-log tool -> readable labels + units.
-_EVIDENCE_LABELS = {
-    "motor": "Motor", "imbalance_pct": "Imbalance", "sustained_s": "Sustained",
-    "max_ms2": "Peak", "rms_ms2": "RMS", "seconds_over": "Above limit",
-    "baseline_v": "Fresh baseline", "min_v": "Minimum", "sag_v": "Sag",
-    "max_temp_c": "Peak temperature", "avg_temp_c": "Average temperature",
-    "current_a": "Current", "voltage_v": "Voltage",
-}
-_EVIDENCE_UNITS = {
-    "imbalance_pct": "%", "sustained_s": " s", "max_ms2": " m/s²", "rms_ms2": " m/s²",
-    "seconds_over": " s", "baseline_v": " V", "min_v": " V", "sag_v": " V",
-    "max_temp_c": " °C", "avg_temp_c": " °C", "current_a": " A", "voltage_v": " V",
-}
-
-
-def _fmt_evidence(key: str, value) -> str:
-    """Format one raw evidence pair as a human-readable phrase."""
-    label = _EVIDENCE_LABELS.get(key, _friendly(key))
-    unit = _EVIDENCE_UNITS.get(key, "")
-    if isinstance(value, list):
-        body = ", ".join(f"{x:.1f}{unit}" if isinstance(x, (int, float)) else str(x)
-                         for x in value)
-    elif isinstance(value, (int, float)):
-        body = f"{value:.1f}{unit}" if isinstance(value, float) else f"{value}{unit}"
-    else:
-        body = str(value)
-    return f"{label}: {body}"
-
-
-def _friendly(value, default: str = "—") -> str:
-    """Turn a backend enum into a readable label (TAKEOFF_AUTHORIZATION -> Takeoff authorization)."""
-    s = str(value or "").strip()
-    if not s:
-        return default
-    if s in _FRIENDLY:
-        return _FRIENDLY[s]
-    if s.upper() in _FRIENDLY:
-        return _FRIENDLY[s.upper()]
-    words = s.replace("_", " ").replace("-", " ").split()
-    return " ".join(w.upper() if w.upper() in _ACRONYMS else w.capitalize() for w in words)
+# One source of truth for readable labels: UI, agent answers and PDF reports.
+from backend.app.formatting import (  # noqa: E402
+    friendly as _friendly,
+    format_pair as _fmt_evidence,
+)
 
 # Embedded mode: the whole agent runs in-process (Streamlit Community Cloud, single-process).
 # See frontend/embedded_api.py. The helpers below delegate to it when this is set.

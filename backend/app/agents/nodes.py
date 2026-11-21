@@ -7,6 +7,7 @@ from pathlib import Path
 
 from ..config import get_settings
 from ..db import Approval, RunAudit, get_session
+from ..formatting import friendly
 from ..rag.retrieve import format_context, retrieve
 from ..tools.battery import BatteryInput, estimate_battery_range
 from ..tools.flight_logs import parse_flight_log
@@ -243,18 +244,7 @@ def _run_log_analysis(state: AgentState, log_path: str) -> AgentState:
         "PASS": "**PASS — no anomalies detected**",
     }.get(verdict, f"**{verdict}**")
 
-    _TYPE_LABELS = {
-        "MOTOR_CURRENT_IMBALANCE": "Motor current imbalance",
-        "VIBRATION_EXCESSIVE": "Excessive vibration",
-        "BATTERY_VOLTAGE_SAG": "Battery voltage sag",
-        "MOTOR_TEMP": "Motor overheat",
-        "MOTOR_OVERHEAT": "Motor overheat",
-        "VOLTAGE_LOW": "Low pack voltage",
-    }
 
-    def _type_label(value: str) -> str:
-        key = (value or "").upper()
-        return _TYPE_LABELS.get(key, key.replace("_", " ").capitalize() if key else "Finding")
 
     sev_counts = {}
     for a in anomalies:
@@ -264,7 +254,7 @@ def _run_log_analysis(state: AgentState, log_path: str) -> AgentState:
         if anomalies else "**Findings**\n- none"
     )
     anomaly_lines = "\n".join(
-        f"- **{_type_label(a.type)}** ({(a.severity or '').upper()}) — {a.description}"
+        f"- **{friendly(a.type, 'Finding')}** ({friendly(a.severity, 'Unknown')}) — {a.description}"
         for a in anomalies
     )
 

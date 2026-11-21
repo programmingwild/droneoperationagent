@@ -3,6 +3,7 @@ import json
 from datetime import datetime, timezone
 
 from ..db import Ticket, get_session
+from ..formatting import friendly
 from ..tools.flight_logs import LogAnalysis
 
 SEVERITY_BY_VERDICT = {"GROUND": "HIGH", "MONITOR": "MEDIUM", "PASS": "LOW"}
@@ -39,9 +40,10 @@ def create_ticket_from_analysis(analysis: LogAnalysis, log_file: str | None = No
     severity = SEVERITY_BY_VERDICT.get(analysis.verdict, "MEDIUM")
     if any(a["severity"] == "CRITICAL" for a in anomalies):
         severity = "CRITICAL"
-    title = f"Flight log anomaly review — verdict {analysis.verdict} (score {analysis.anomaly_score}/100)"
+    verdict_label = friendly(analysis.verdict, "Unknown")
+    title = f"Flight log anomaly review — verdict {verdict_label} (score {analysis.anomaly_score}/100)"
     action = (
-        "Aircraft GROUNDED pending inspection of flagged systems before next flight."
+        f"Aircraft {verdict_label.lower()} pending inspection of flagged systems before next flight."
         if analysis.verdict == "GROUND"
         else "Inspect flagged systems within 5 flights; monitor trend."
     )
