@@ -17,6 +17,9 @@ data/vector_store.json
 data/local_embedder.pkl
 data/reports/
 
+# Local agent tooling (skills installed via skills.sh — not app code)
+.agents/
+
 # Editor / OS
 .vscode/
 .idea/

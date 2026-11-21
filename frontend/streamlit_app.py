@@ -18,31 +18,61 @@ import streamlit.components.v1 as components
 
 API = os.environ.get("DRONEOPS_API", "http://127.0.0.1:8000")
 
+# Inline SVG icons for raw-HTML regions. One family (outline, 1.8 stroke,
+# currentColor) so icons inherit the theme and never render as font emojis.
+_ICON_PATHS = {
+    "drone": ('<circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/>'
+              '<circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>'
+              '<path d="M6.4 6.4l3.2 3.2m8-3.2-3.2 3.2m-8 8 3.2-3.2m8 3.2-3.2-3.2"/>'
+              '<rect x="9" y="9" width="6" height="6" rx="1.5"/>'),
+    "check-circle": ('<path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/>'
+                     '<path d="m9 11 3 3L22 4"/>'),
+    "alert-triangle": ('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>'
+                       '<path d="M12 9v4m0 4h.01"/>'),
+    "x-circle": ('<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/>'),
+    "copy": ('<rect x="9" y="9" width="13" height="13" rx="2"/>'
+             '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+}
+
+
+def _ico(name: str, size: int = 18, cls: str = "") -> str:
+    """Return an inline outline SVG that inherits the current text color."""
+    return (f'<span class="ico {cls}" aria-hidden="true" style="width:{size}px;height:{size}px">'
+            f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" fill="none" '
+            f'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '
+            f'stroke-linejoin="round">{_ICON_PATHS.get(name, _ICON_PATHS["drone"])}</svg></span>')
+
 # Embedded mode: the whole agent runs in-process (Streamlit Community Cloud, single-process).
 # See frontend/embedded_api.py. The helpers below delegate to it when this is set.
 EMBEDDED = os.environ.get("EMBEDDED_API", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
-st.set_page_config(page_title="Drone Ops Agent", page_icon="🛸", layout="wide",
+st.set_page_config(page_title="Drone Ops Agent", page_icon="assets/drone.svg", layout="wide",
                    initial_sidebar_state="expanded")
 
 # ------------------------------------------------------------------ theme CSS
 st.markdown("""
 <style>
 /* ================= Liquid Glass — mission-control design system ================ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
   --glass: rgba(17, 27, 46, 0.55);
   --glass-strong: rgba(22, 34, 57, 0.72);
   --glass-soft: rgba(17, 27, 46, 0.38);
-  --stroke: rgba(154, 203, 255, 0.14);
-  --stroke-hi: rgba(154, 203, 255, 0.30);
+  --stroke: rgba(154, 203, 255, 0.20);
+  --stroke-hi: rgba(154, 203, 255, 0.36);
   --accent: #22d3ee;
-  --hi: #eef6ff;
+  --hi: #f2f7ff;
   --mid: #a9c5e6;
-  --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --muted: #93b4d6;   /* >= 7:1 on every surface */
+  --faint: #9fb3cc;   /* >= 7:1 on every surface */
+  --sans: 'Fira Sans', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'Fira Code', ui-monospace, Consolas, monospace;
 }
+
+/* No horizontal scroll; keyboard focus never hidden behind sticky UI. */
+html, body { overflow-x: clip; scroll-padding-top: 4.35rem; scroll-padding-bottom: 5rem; }
 
 .block-container { padding-top: 4.35rem; padding-bottom: 1.5rem; max-width: 1100px; }
 
@@ -53,7 +83,7 @@ st.markdown("""
     radial-gradient(760px 720px at 55% 115%, rgba(139,92,246,.22), transparent 62%),
     #070d1b;
   color: var(--hi);
-  font-family: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--sans);
 }
 
 /* ---------- sidebar: frosted left rail ---------- */
@@ -66,7 +96,7 @@ st.markdown("""
 [data-testid="stSidebar"] hr { border-color: var(--stroke); margin: .55rem 0; }
 [data-testid="stSidebar"] .brand .logo { filter: drop-shadow(0 0 14px rgba(34,211,238,.6)); font-size:1.55rem; }
 [data-testid="stSidebar"] .brand .name {
-  font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 800; font-size: 1.02rem;
+  font-family: var(--sans); font-weight: 800; font-size: 1.02rem;
   letter-spacing: .03em;
   background: linear-gradient(95deg,#f2fbff 0%, #67e8f9 45%, #3b82f6 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -74,7 +104,7 @@ st.markdown("""
 [data-testid="stSidebar"] .brand .sub { color: var(--mid); font-size: .68rem; }
 [data-testid="stSidebar"] .nav-label {
   font-family: var(--mono); font-size:.62rem; letter-spacing:.18em; text-transform: uppercase;
-  color:#5f7ea6; margin:.35rem 0 .1rem .1rem;
+  color:var(--muted); margin:.35rem 0 .1rem .1rem;
 }
 [data-testid="stSidebar"] .stButton > button {
   justify-content: flex-start; text-align: left;
@@ -140,7 +170,7 @@ st.markdown("""
 .empty-wrap { max-width: 760px; margin: 8vh auto 0; text-align: center; }
 .empty-glyph { font-size: 3.2rem; filter: drop-shadow(0 0 30px rgba(34,211,238,.55)); }
 .empty-title {
-  font-family: 'Space Grotesk','Inter',sans-serif; font-size: 1.65rem; font-weight: 700;
+  font-family: var(--sans); font-size: 1.65rem; font-weight: 700;
   letter-spacing: -.02em; margin: .5rem 0 .2rem;
   background: linear-gradient(95deg,#f2fbff 0%, #7dd3fc 35%, #38bdf8 60%, #818cf8 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -180,7 +210,7 @@ st.markdown("""
 .verdict { border-radius:16px; padding:.75rem 1.05rem; margin:.35rem 0 .6rem 0; color:#fff;
            backdrop-filter: blur(12px);
            box-shadow: 0 18px 46px rgba(2,8,23,.5), inset 0 1px 0 rgba(255,255,255,.22); }
-.verdict h3 { margin:0; font-size:1.05rem; font-family:'Space Grotesk','Inter',sans-serif; }
+.verdict h3 { margin:0; font-size:1.05rem; font-family:var(--sans); }
 .verdict small { opacity:.92; font-size:.78rem; font-family: var(--mono); }
 .v-ground  { background: linear-gradient(135deg, rgba(127,29,29,.85), rgba(220,38,38,.75)); border:1px solid rgba(252,165,165,.5); }
 .v-monitor { background: linear-gradient(135deg, rgba(120,53,15,.85), rgba(217,119,6,.75)); border:1px solid rgba(252,211,77,.5); }
@@ -191,7 +221,7 @@ st.markdown("""
         border-radius:14px; padding:.5rem .6rem; text-align:center; backdrop-filter: blur(10px);
         box-shadow: inset 0 1px 0 rgba(255,255,255,.07); }
 .tile .k { color:#8fb4d8; font-size:.6rem; text-transform:uppercase; letter-spacing:.07em; }
-.tile .v { color:#eef6ff; font-size:1.02rem; font-weight:800; font-family:'Space Grotesk','Inter',sans-serif; }
+.tile .v { color:#eef6ff; font-size:1.02rem; font-weight:800; font-family:var(--sans); }
 
 .finding { display:flex; gap:.6rem; align-items:flex-start; border:1px solid var(--stroke);
            border-left:4px solid #64748b; border-radius:14px; padding:.55rem .75rem;
@@ -211,12 +241,12 @@ st.markdown("""
            background: rgba(34,211,238,.06); margin:.4rem 0; backdrop-filter: blur(8px); }
 .actions b { color:#67e8f9; }
 .actions li { color:#c4dcf5; font-size:.82rem; margin:.15rem 0; line-height:1.45; }
-.rawhint { color:#64748b; font-size:.72rem; }
+.rawhint { color:var(--faint); font-size:.76rem; }
 
 /* ---------- native widgets: glass ---------- */
 [data-testid="stMetric"] { background: var(--glass-soft); border:1px solid var(--stroke);
   border-radius:14px; padding:.55rem .75rem; backdrop-filter: blur(10px); }
-[data-testid="stMetricValue"] { font-family:'Space Grotesk','Inter',sans-serif; color:#eef6ff; }
+[data-testid="stMetricValue"] { font-family:var(--sans); color:#eef6ff; }
 [data-testid="stExpander"] { border:1px solid var(--stroke) !important; border-radius:14px !important;
   background: var(--glass-soft) !important; backdrop-filter: blur(10px); }
 [data-testid="stChatInput"] { border:1px solid var(--stroke-hi) !important; border-radius:16px;
@@ -231,8 +261,93 @@ code, pre { font-family: var(--mono) !important; }
 ::-webkit-scrollbar-thumb { background: rgba(154,203,255,.18); border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(154,203,255,.32); }
 :focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- vector icons & status dots (no emoji as structural icons) ---------- */
+.ico { display:inline-flex; align-items:center; justify-content:center; vertical-align:-.18em; flex:0 0 auto; }
+.ico svg { display:block; }
+.sev-dot { display:inline-block; width:9px; height:9px; border-radius:999px; flex:0 0 auto;
+           box-shadow:0 0 0 3px rgba(255,255,255,.06); }
+.sev-high   { background:#f87171; box-shadow:0 0 10px rgba(248,113,113,.6); }
+.sev-medium { background:#fbbf24; box-shadow:0 0 10px rgba(251,191,36,.5); }
+.sev-low    { background:#a3e635; }
+.sev-none   { background:#64748b; }
+
+/* Pressed feedback — stable, no layout shift. Disabled states read as disabled. */
+.stButton > button:active { transform: translateY(0) scale(.985) !important; }
+.stButton > button:disabled { opacity:.45 !important; cursor:not-allowed !important; }
+.stApp { scroll-padding-bottom: 5rem; }
+
+/* ================= responsive / interaction polish ================= */
+/* Soft lift on the elements people actually touch — makes the UI feel alive. */
+.umsg > div, .cite-card, .tile, .finding, .verdict, .hitl, .suggest {
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease, border-color .2s ease !important;
+}
+.umsg > div:hover { transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(2,8,23,.55), inset 0 1px 0 rgba(255,255,255,.1); }
+.cite-card:hover, .finding:hover { transform: translateX(3px); border-color: rgba(103,232,249,.4); }
+.tile:hover { transform: translateY(-2px); border-color: rgba(154,203,255,.28); }
+
+/* Compact top bar — shown only on small screens where the sidebar is hidden. */
+.mtop { display: none; }
+.mtop-status { color:#7dd3fc; font-family: var(--mono); font-size:.64rem; letter-spacing:.08em; }
+
+@media (max-width: 1100px) {
+  .block-container { max-width: 100%; padding-left: 1.1rem; padding-right: 1.1rem; }
+}
+
+@media (max-width: 860px) {
+  .block-container { padding-top: 3.4rem; padding-left: .9rem; padding-right: .9rem; }
+  .chat-col { max-width: 100%; }
+  .empty-wrap { margin-top: 4vh; }
+  .empty-title { font-size: 1.4rem; }
+  .empty-glyph { font-size: 2.6rem; }
+  .suggest { min-height: 80px; }
+  .umsg > div { max-width: 88%; }
+  .tiles { gap: .35rem; }
+  .tile { flex: 1 1 30%; padding: .45rem .45rem; }
+  .tile .v { font-size: .92rem; }
+  .finding { padding: .45rem .6rem; }
+  [data-testid="stChatInput"] { position: sticky; bottom: .5rem; z-index: 5; }
+  /* Touch targets >= 44px on small screens. */
+  .stButton > button, [data-testid="stSidebar"] .stButton > button { min-height: 44px !important; }
+  [data-testid="stSidebar"] .stButton > button { padding: .55rem .7rem !important; }
+  .msg-actions button { min-height: 44px; min-width: 44px; padding: .5rem .8rem; }
+}
+
+@media (max-width: 560px) {
+  .block-container { padding-top: 3rem; padding-left: .6rem; padding-right: .6rem; }
+  .empty-title { font-size: 1.2rem; }
+  .empty-sub { font-size: .85rem; }
+  .empty-glyph { font-size: 2.1rem; }
+  .suggest { min-height: 64px; font-size: .76rem; }
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .tile { flex: none; }
+  .tile .v { font-size: .88rem; }
+  .umsg > div { max-width: 92%; padding: .5rem .75rem; }
+  .hitl { padding: .6rem .7rem; }
+  .verdict { padding: .6rem .8rem; }
+  .verdict h3 { font-size: .92rem; }
+  .mtop {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .5rem .75rem; margin-bottom: .7rem;
+    background: var(--glass); border: 1px solid var(--stroke); border-radius: 12px;
+    backdrop-filter: blur(12px);
+  }
+  .mtop b { font-family: var(--sans); letter-spacing: .02em; }
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
 </style>
 """, unsafe_allow_html=True)
+
+# Rendered at the top of the main column; CSS keeps it hidden on desktop.
+st.markdown(
+    f'<div class="mtop"><b>{_ico("drone", 16)} Drone Ops Agent</b>'
+    '<span class="mtop-status">DECISION SUPPORT</span></div>',
+    unsafe_allow_html=True)
 
 # ------------------------------------------------------------------ helpers
 
@@ -316,25 +431,26 @@ def severity_pill(sev: str) -> str:
     return f'<span class="pill {cls}">{sev}</span>'
 
 
-def copy_to_clipboard(text: str, label: str = "📋 Copy"):
+def copy_to_clipboard(text: str, label: str = "Copy"):
     safe = json.dumps(text[:4000])
     html = f"""
-    <button id="c" style="cursor:pointer;border:1px solid rgba(154,203,255,.22);background:rgba(34,211,238,.07);color:#bfeaff;border-radius:9px;padding:.22rem .6rem;font-size:.75rem;font-family:Inter,sans-serif;font-weight:600">{label}</button>
+    <button id="c" style="cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;border:1px solid rgba(154,203,255,.22);background:rgba(34,211,238,.07);color:#bfeaff;border-radius:9px;padding:.35rem .7rem;font-size:.76rem;font-family:'Fira Sans',sans-serif;font-weight:600;min-height:32px">{_ico("copy", 13)} {label}</button>
     <script>
       const b = document.getElementById('c');
+      const orig = b.innerHTML;
       b.addEventListener('click', async () => {{
-        try {{ await navigator.clipboard.writeText({safe}); b.textContent = '✓ Copied'; }}
+        try {{ await navigator.clipboard.writeText({safe}); b.textContent = 'Copied'; }}
         catch (e) {{ b.textContent = 'Select + Ctrl+C'; }}
-        setTimeout(() => b.textContent = '{label}', 1600);
+        setTimeout(() => {{ b.innerHTML = orig; }}, 1600);
       }});
     </script>"""
     components.html(html, height=40)
 
 
 _VERA = {
-    "GROUND": ("🚫", "GROUNDED — DO NOT FLY", "v-ground"),
-    "MONITOR": ("⚠️", "MONITOR — RESTRICTED OPERATIONS", "v-monitor"),
-    "PASS": ("✅", "PASS — NO ANOMALIES", "v-pass"),
+    "GROUND": ("x-circle", "GROUNDED — DO NOT FLY", "v-ground"),
+    "MONITOR": ("alert-triangle", "MONITOR — RESTRICTED OPERATIONS", "v-monitor"),
+    "PASS": ("check-circle", "PASS — NO ANOMALIES", "v-pass"),
 }
 
 
@@ -342,7 +458,7 @@ def render_flight_panel(la: dict, ticket: dict | None):
     verdict = str(la.get("verdict", "")).upper()
     icon, label, cls = _VERA.get(verdict, ("❓", verdict or "UNKNOWN", "v-monitor"))
     st.markdown(
-        f'<div class="verdict {cls}"><h3>{icon} {label}</h3>'
+        f'<div class="verdict {cls}"><h3>{_ico(icon, 20)} {label}</h3>'
         f'<small>{la.get("rows", "?")} rows · {la.get("duration_s", 0):.1f}s · '
         f'anomaly score {la.get("anomaly_score", "?")}/100</small></div>',
         unsafe_allow_html=True)
@@ -362,11 +478,12 @@ def render_flight_panel(la: dict, ticket: dict | None):
     for a in anoms:
         sev = (a.get("severity") or "").upper()
         cls = {"HIGH": "f-high", "CRITICAL": "f-high", "MEDIUM": "f-medium", "LOW": "f-low"}.get(sev, "")
-        ico = {"HIGH": "🔴", "CRITICAL": "🔴", "MEDIUM": "🟠", "LOW": "🟡"}.get(sev, "⚪")
+        dot = {"HIGH": "sev-high", "CRITICAL": "sev-high", "MEDIUM": "sev-medium",
+               "LOW": "sev-low"}.get(sev, "sev-none")
         ev = a.get("evidence") or {}
         ev_txt = " · ".join(f"{k}={v}" for k, v in list(ev.items())[:5])
         st.markdown(
-            f'<div class="finding {cls}"><div class="icon">{ico}</div><div>'
+            f'<div class="finding {cls}"><div class="icon"><span class="sev-dot {dot}"></span></div><div>'
             f'<div class="type">[{sev}] {a.get("type", "")}</div>'
             f'<div class="desc">{a.get("description", "")}</div>'
             + (f'<div class="mono">{ev_txt}</div>' if ev_txt else "")
@@ -380,7 +497,7 @@ def render_flight_panel(la: dict, ticket: dict | None):
             f'<div class="actions"><b>Ticket {t_id}</b> · severity <b>{t_sev}</b> · status {ticket.get("status")}<br/>'
             "Aircraft is <b>grounded pending inspection</b>. Technician sign-off required before next flight.</div>",
             unsafe_allow_html=True)
-        if st.button("📄 Export report (PDF)", key=f"panel-pdf-{t_id}"):
+        if st.button("Export report (PDF)", key=f"panel-pdf-{t_id}"):
             code, content, fname = api_download(f"/report/{t_id}")
             if code == 200:
                 st.download_button("Download PDF", content,
@@ -400,7 +517,7 @@ def approval_banner(pending: dict):
         st.markdown(pending.get("summary", ""))
         c1, c2, _ = st.columns([1, 1, 4])
         with c1:
-            if st.button("✅ Approve", type="primary", use_container_width=True):
+            if st.button("Approve", type="primary", use_container_width=True):
                 res = api_post("/approve", {"approval_id": pending["id"], "approved": True,
                                             "decided_by": "streamlit-operator"})
                 st.session_state.messages.append(
@@ -408,7 +525,7 @@ def approval_banner(pending: dict):
                 st.session_state.pop("pending_approval", None)
                 st.rerun()
         with c2:
-            if st.button("❌ Reject", use_container_width=True):
+            if st.button("Reject", use_container_width=True):
                 res = api_post("/approve", {"approval_id": pending["id"], "approved": False,
                                             "decided_by": "streamlit-operator"})
                 st.session_state.messages.append(
@@ -431,28 +548,28 @@ def render_message(m: dict, index: int):
                     unsafe_allow_html=True)
         return
 
-    st.markdown('<div class="amsg-meta"><div class="amsg-avatar">🛸</div>'
+    st.markdown(f'<div class="amsg-meta"><div class="amsg-avatar">{_ico("drone", 15)}</div>'
                 '<div class="amsg-name">Drone Ops Agent</div></div>', unsafe_allow_html=True)
     panel = m.get("panel")
     if panel:
         render_flight_panel(panel.get("log_analysis", {}), panel.get("ticket"))
     st.markdown(m.get("text", ""))
     if m.get("citations"):
-        with st.expander(f"📚 Sources ({len(m['citations'])})"):
+        with st.expander(f"Sources ({len(m['citations'])})"):
             for i, c in enumerate(m["citations"], 1):
                 loc = f"p.{c['page']}" if c.get("page") else (c.get("section") or "")
                 st.markdown(
                     f'<div class="cite-card"><b>[{i}] {c.get("source")}</b><br>{loc}<br>relevance {c.get("score", 0):.3f}</div>',
                     unsafe_allow_html=True)
     if m.get("trace"):
-        with st.expander("🔍 Agent trace"):
+        with st.expander("Agent trace"):
             st.markdown(" → ".join(f"`{s}`" for s in m["trace"]))
 
     c1, c2, _ = st.columns([1.4, 1.4, 8])
     with c1:
         copy_to_clipboard(m.get("text", ""))
     with c2:
-        if st.button("↻ Regenerate", key=f"regen-{index}"):
+        if st.button("Regenerate", key=f"regen-{index}"):
             # re-ask the previous user message, dropping this assistant reply
             msgs = st.session_state.messages
             for j in range(index - 1, -1, -1):
@@ -470,7 +587,7 @@ def handle_query(prompt: str, show_user: bool = True):
         st.markdown(f'<div class="umsg"><div>{_html.escape(prompt)}</div></div>',
                     unsafe_allow_html=True)
 
-    st.markdown('<div class="amsg-meta"><div class="amsg-avatar">🛸</div>'
+    st.markdown(f'<div class="amsg-meta"><div class="amsg-avatar">{_ico("drone", 15)}</div>'
                 '<div class="amsg-name">Drone Ops Agent</div></div>',
                 unsafe_allow_html=True)
     status = st.status("Drone Ops Agent is thinking…", expanded=True)
@@ -487,8 +604,8 @@ def handle_query(prompt: str, show_user: bool = True):
                 "action": event.get("action"),
                 "summary": event.get("summary"),
             }
-            final_answer = ("🛡️ This flight requires your explicit approval before any "
-                            "takeoff/arm authorization. See the approval panel.")
+            final_answer = ("This flight requires your explicit approval "
+                            "before any takeoff/arm authorization. See the approval panel.")
             trace = steps
         elif etype == "final":
             final_answer = event.get("answer", "")
@@ -496,7 +613,7 @@ def handle_query(prompt: str, show_user: bool = True):
             trace = event.get("trace", steps)
             tool_results = event.get("tool_results") or {}
         elif etype == "error":
-            final_answer = (f"⚠️ Agent error: {event.get('error')}\n\n"
+            final_answer = (f"Agent error: {event.get('error')}\n\n"
                             f"{event.get('safe_default', 'Do not launch.')}")
     status.update(label="Done", state="complete")
 
@@ -504,7 +621,7 @@ def handle_query(prompt: str, show_user: bool = True):
              "ticket": tool_results.get("ticket")} if tool_results.get("log_analysis") else None
     if panel:
         render_flight_panel(panel["log_analysis"], panel.get("ticket"))
-        with st.expander("📄 Raw agent answer"):
+        with st.expander("Raw agent answer"):
             st.markdown(final_answer)
     else:
         st.markdown(final_answer)
@@ -519,11 +636,11 @@ true_pending = api_get("/approvals/pending") if api_ok else []
 pending_n = len(true_pending) if isinstance(true_pending, list) else 0
 
 NAV = [
-    ("💬", "Chat", "chat"),
-    ("🔧", "Tickets", "tickets"),
-    ("🛡️", "Approvals", "approvals"),
-    ("📄", "Flight logs", "logs"),
-    ("📈", "Runs", "runs"),
+    ("Chat", "chat"),
+    ("Tickets", "tickets"),
+    ("Approvals", "approvals"),
+    ("Flight logs", "logs"),
+    ("Runs", "runs"),
 ]
 if "nav" not in st.session_state:
     st.session_state.nav = "chat"
@@ -531,12 +648,12 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 with st.sidebar:
-    st.markdown('<div class="brand"><div class="logo">🛸</div><div>'
+    st.markdown(f'<div class="brand"><div class="logo">{_ico("drone", 22)}</div><div>'
                 '<div class="name">Drone Ops Agent</div>'
                 '<div class="sub">Multi-agent RAG · UAS fleet readiness</div>'
                 "</div></div>", unsafe_allow_html=True)
 
-    if st.button("＋ New chat", type="primary", use_container_width=True):
+    if st.button("New chat", type="primary", use_container_width=True):
         st.session_state.messages = []
         st.session_state.pop("pending_approval", None)
         st.session_state.pop("queued_prompt", None)
@@ -544,12 +661,12 @@ with st.sidebar:
         st.rerun()
 
     st.markdown('<div class="nav-label">Workspace</div>', unsafe_allow_html=True)
-    for icon, label, key in NAV:
+    for label, key in NAV:
         badge = ""
         if key == "approvals" and pending_n:
             badge = f"  ·  {pending_n}"
         btn_type = "primary" if st.session_state.nav == key else "secondary"
-        if st.button(f"{icon}  {label}{badge}", key=f"nav-{key}",
+        if st.button(f"{label}{badge}", key=f"nav-{key}",
                      use_container_width=True, type=btn_type):
             st.session_state.nav = key
             st.rerun()
@@ -559,21 +676,21 @@ with st.sidebar:
     if not api_ok:
         st.warning(f"API unreachable at {API}")
     else:
-        llm = "🟢 Groq" if health.get("llm_available") else "🟡 OFFLINE"
+        llm = "Groq (online)" if health.get("llm_available") else "OFFLINE fallback"
         st.markdown(f"LLM &nbsp;**{llm}**", unsafe_allow_html=True)
         c1, c2 = st.columns(2)
         c1.metric("Vector docs", health.get("vector_store_docs", "—"))
         c2.metric("Embeddings", str(health.get("embedding_provider", "local")))
-        tracing = "🟢 on" if health.get("langsmith_tracing") else "⚪ off"
+        tracing = "on" if health.get("langsmith_tracing") else "off"
         st.caption(f"app {health.get('app_env', '?')} · v{health.get('version', '?')} · tracing {tracing}")
     st.divider()
 
     st.markdown('<div class="nav-label">Quick prompts</div>', unsafe_allow_html=True)
     for label, q in [
-        ("⚖️  Part 107 over-people rule", "Is flying over people legal under Part 107?"),
-        ("🔧  Analyze last flight log", "Analyze the last flight log and open a maintenance ticket if needed"),
-        ("✈️  VX-6 20-min inspection", "Can I fly the VX-6 on a 20-min inspection mission at 120m and what are the risks?"),
-        ("🛰️  DGCA yellow-zone rules", "What is required to fly a drone in a yellow zone in India?"),
+        ("Part 107 over-people rule", "Is flying over people legal under Part 107?"),
+        ("Analyze last flight log", "Analyze the last flight log and open a maintenance ticket if needed"),
+        ("VX-6 20-min inspection", "Can I fly the VX-6 on a 20-min inspection mission at 120m and what are the risks?"),
+        ("DGCA yellow-zone rules", "What is required to fly a drone in a yellow zone in India?"),
     ]:
         if st.button(label, use_container_width=True, key=f"qp-{label}"):
             st.session_state.queued_prompt = q
@@ -594,20 +711,20 @@ if st.session_state.nav == "chat":
         approval_banner(st.session_state.pending_approval)
 
     if not st.session_state.messages:
-        st.markdown('<div class="empty-wrap"><div class="empty-glyph">🛸</div>'
+        st.markdown(f'<div class="empty-wrap"><div class="empty-glyph">{_ico("drone", 52)}</div>'
                     '<div class="empty-title">How can I help with your fleet today?</div>'
                     '<div class="empty-sub">Grounded answers · cited sources · human-approved authorizations</div></div>',
                     unsafe_allow_html=True)
         cols = st.columns(2)
         suggestions = [
-            ("⚖️", "Legality check", "Is flying over people legal under Part 107?"),
-            ("🔧", "Analyze the flight log", "Analyze the last flight log and open a maintenance ticket if needed"),
-            ("✈️", "Plan a mission", "Can I fly the VX-6 on a 20-min inspection mission at 120m?"),
-            ("🛰️", "DGCA rules", "What is required to fly a drone in a yellow zone in India?"),
+            ("Legality check", "Is flying over people legal under Part 107?"),
+            ("Analyze the flight log", "Analyze the last flight log and open a maintenance ticket if needed"),
+            ("Plan a mission", "Can I fly the VX-6 on a 20-min inspection mission at 120m?"),
+            ("DGCA rules", "What is required to fly a drone in a yellow zone in India?"),
         ]
-        for i, (icon, title, q) in enumerate(suggestions):
+        for i, (title, q) in enumerate(suggestions):
             with cols[i % 2]:
-                if st.button(f"{icon}  {title}", key=f"sugg-{i}", use_container_width=True,
+                if st.button(f"{title}", key=f"sugg-{i}", use_container_width=True,
                              help=q):
                     st.session_state.queued_prompt = q
                     st.rerun()
@@ -629,7 +746,7 @@ if st.session_state.nav == "chat":
                         st.session_state.pop("editing", None)
                         st.rerun()
                 else:
-                    if st.button("✏️", key=f"edit-btn-{i}", help="Edit and resend"):
+                    if st.button("", key=f"edit-btn-{i}", help="Edit and resend"):
                         st.session_state.editing = i
                         st.rerun()
 
@@ -674,7 +791,7 @@ elif st.session_state.nav == "tickets":
                     st.markdown(f_.get("description", ""))
                     if f_.get("evidence"):
                         st.json(f_["evidence"], expanded=False)
-            if st.button("📄 Export PDF", key=f"pdf-{t.get('id')}"):
+            if st.button("Export PDF", key=f"pdf-{t.get('id')}"):
                 code, content, fname = api_download(f"/report/{t.get('id')}")
                 if code == 200:
                     st.download_button("Download PDF", content,
@@ -699,11 +816,11 @@ elif st.session_state.nav == "approvals":
             with st.container(border=True):
                 st.markdown(p.get("summary", ""))
                 c1, c2, _ = st.columns([1, 1, 4])
-                if c1.button("✅ Approve", key=f"ap-{p['id']}", type="primary"):
+                if c1.button("Approve", key=f"ap-{p['id']}", type="primary"):
                     api_post("/approve", {"approval_id": p["id"], "approved": True,
                                           "decided_by": "streamlit-operator"})
                     st.rerun()
-                if c2.button("❌ Reject", key=f"rj-{p['id']}"):
+                if c2.button("Reject", key=f"rj-{p['id']}"):
                     api_post("/approve", {"approval_id": p["id"], "approved": False,
                                           "decided_by": "streamlit-operator"})
                     st.rerun()
@@ -722,7 +839,7 @@ elif st.session_state.nav == "logs":
             c1, c2 = st.columns([4, 1])
             c1.markdown(f"**`{name}`**")
             c1.caption("Telemetry CSV · eligible for maintenance analysis")
-            if c2.button("🔍 Analyze", key=f"log-{name}", use_container_width=True):
+            if c2.button("Analyze", key=f"log-{name}", use_container_width=True):
                 st.session_state.queued_prompt = (
                     f"Analyze flight log {name} and open a maintenance ticket if needed")
                 st.session_state.nav = "chat"
@@ -738,10 +855,14 @@ elif st.session_state.nav == "runs":
         st.info("No runs recorded yet.")
     for r in runs:
         status_ = (r.get("status") or "?").lower()
-        icon = "✅" if status_ == "completed" else ("🛡️" if status_ in {"approval_required", "paused", "awaiting_approval"} else "⚠️")
+        dot = ("sev-low" if status_ == "completed" else
+               "sev-high" if status_ in {"approval_required", "paused", "awaiting_approval"} else "sev-medium")
         with st.container(border=True):
             c1, c2 = st.columns([5, 1])
-            c1.markdown(f"{icon} **{r.get('query', '')}**")
+            c1.markdown(
+                f'<div style="display:flex;align-items:center;gap:.55rem">'
+                f'<span class="sev-dot {dot}"></span><b>{_html.escape(str(r.get("query", "")))}</b></div>',
+                unsafe_allow_html=True)
             c1.caption(f"{r.get('started_at', '')} · run `{r.get('id', '')[:12]}`")
             c2.markdown(f'<span class="pill pill-info">{r.get("classification") or "?"}</span>',
                         unsafe_allow_html=True)
