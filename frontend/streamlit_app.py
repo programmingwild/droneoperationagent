@@ -42,6 +42,50 @@ def _ico(name: str, size: int = 18, cls: str = "") -> str:
             f'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '
             f'stroke-linejoin="round">{_ICON_PATHS.get(name, _ICON_PATHS["drone"])}</svg></span>')
 
+
+# Backend enums are UPPER_SNAKE_CASE; never show that raw in the UI.
+_FRIENDLY = {
+    "TAKEOFF_AUTHORIZATION": "Takeoff authorization",
+    "RPA_ARM": "RPA arming",
+    "TAKEOFF": "Takeoff",
+    "ARM": "Arming",
+    "INSPECT": "Inspection required",
+    "HOLD": "Hold — do not launch",
+    "GROUND": "Grounded",
+    "MONITOR": "Restricted operations",
+    "PASS": "No anomalies",
+    "TRIAGE": "Triage",
+    "MISSION_PLANNING": "Mission planning",
+    "MAINTENANCE": "Maintenance",
+    "REGULATION": "Regulation compliance",
+    "ANOMALY": "Anomaly detection",
+    "SAFETY_SUPERVISOR": "Safety supervisor",
+    "HUMAN_APPROVAL": "Human approval",
+    "FINALIZE": "Finalize",
+    "COMPLETED": "Completed",
+    "AWAITING_APPROVAL": "Awaiting approval",
+    "APPROVAL_REQUIRED": "Approval required",
+    "PAUSED": "Paused",
+    "ERROR": "Error",
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected",
+}
+_ACRONYMS = {"RPA", "UAS", "VTOL", "FAA", "EASA", "DGCA", "NOTAM", "METAR", "TAF", "HITL", "PDF", "ID"}
+
+
+def _friendly(value, default: str = "—") -> str:
+    """Turn a backend enum into a readable label (TAKEOFF_AUTHORIZATION -> Takeoff authorization)."""
+    s = str(value or "").strip()
+    if not s:
+        return default
+    if s in _FRIENDLY:
+        return _FRIENDLY[s]
+    if s.upper() in _FRIENDLY:
+        return _FRIENDLY[s.upper()]
+    words = s.replace("_", " ").replace("-", " ").split()
+    return " ".join(w.upper() if w.upper() in _ACRONYMS else w.capitalize() for w in words)
+
 # Embedded mode: the whole agent runs in-process (Streamlit Community Cloud, single-process).
 # See frontend/embedded_api.py. The helpers below delegate to it when this is set.
 EMBEDDED = os.environ.get("EMBEDDED_API", "").strip().lower() in {"1", "true", "yes", "on"}
@@ -201,7 +245,7 @@ html, body { overflow-x: clip; scroll-padding-top: 4.35rem; scroll-padding-botto
         background: linear-gradient(160deg, rgba(69,10,10,.82), rgba(43,15,18,.82));
         backdrop-filter: blur(14px); border-radius:16px; padding:.8rem 1rem; margin-bottom:.6rem;
         color:#ffe4e4; box-shadow: 0 0 0 1px rgba(248,113,113,.15), 0 16px 48px rgba(239,68,68,.18); }
-.hitl h4 { margin:0 0 .3rem 0; color:#fca5a5; letter-spacing:.06em; text-transform:uppercase; font-size:.78rem; }
+.hitl h4 { margin:0 0 .3rem 0; color:#fca5a5; letter-spacing:.04em; font-size:.86rem; font-weight:700; }
 .hitl code { background:#3b1216; color:#fda4a4; border:1px solid rgba(248,113,113,.4);
              border-radius:6px; padding:.1rem .35rem; font-size:.82rem; font-family: var(--mono); }
 .hitl b { color: #fecaca; }
@@ -515,7 +559,7 @@ def _decide_approval(pending: dict, approved: bool):
     if "_error" in res:
         answer = f"Approval failed safe: {res['_error']}"
     else:
-        answer = res.get("answer") or f"Authorization {decision}."
+        answer = res.get("answer") or f"Authorization {_friendly(decision).lower()}."
     st.session_state.messages.append({"role": "assistant", "text": answer})
     st.session_state.pop("pending_approval", None)
     st.rerun()
@@ -526,7 +570,7 @@ def approval_dialog(pending: dict):
     """Modal popup: an authorization request must never hide above the fold."""
     st.markdown(
         f'<div class="hitl">{_ico("alert-triangle", 20)} <b>Human approval required</b><br/>'
-        f'Action: <b>{_html.escape(str(pending.get("action") or "authorization"))}</b> · '
+        f'Action: <b>{_html.escape(_friendly(pending.get("action"), "authorization"))}</b> · '
         f'approval <code>{_html.escape(str(pending.get("id") or ""))}</code></div>',
         unsafe_allow_html=True)
     st.caption("Nothing launches until you decide — this is a safety control, not a suggestion.")
@@ -814,8 +858,10 @@ elif st.session_state.nav == "approvals":
     if pending:
         for p in pending:
             st.markdown(
-                '<div class="hitl"><h4>Takeoff / arm authorization required</h4>'
-                f'Approval <code>{p.get("id")}</code> · thread <code>{p.get("thread_id")}</code>'
+                '<div class="hitl"><h4>'
+                f'{_html.escape(_friendly(p.get("action"), "Authorization"))} required</h4>'
+                f'Approval <code>{_html.escape(str(p.get("id") or ""))}</code> · '
+                f'thread <code>{_html.escape(str(p.get("thread_id") or ""))}</code>'
                 "</div>", unsafe_allow_html=True)
             with st.container(border=True):
                 st.markdown(p.get("summary", ""))
@@ -868,7 +914,7 @@ elif st.session_state.nav == "runs":
                 f'<span class="sev-dot {dot}"></span><b>{_html.escape(str(r.get("query", "")))}</b></div>',
                 unsafe_allow_html=True)
             c1.caption(f"{r.get('started_at', '')} · run `{r.get('id', '')[:12]}`")
-            c2.markdown(f'<span class="pill pill-info">{r.get("classification") or "?"}</span>',
+            c2.markdown(f'<span class="pill pill-info">{_html.escape(_friendly(r.get("classification")))}</span>',
                         unsafe_allow_html=True)
 
 # ============================================================ HITL MODAL (popup)
