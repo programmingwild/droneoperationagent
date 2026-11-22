@@ -4,11 +4,11 @@
    motion, editorial type. Glass is reserved for sticky chrome only.
    Loaded after the base theme so it wins on equal specificity.
    ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Google+Sans+Flex:wght@300..700&family=Fira+Code:wght@400;500;600;700&display=swap');
 
 :root {
-  --display: 'Space Grotesk', 'Inter', sans-serif;
-  --body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --display: 'Google Sans', 'Google Sans Flex', sans-serif;
+  --body: 'Google Sans Flex', 'Google Sans', sans-serif;
   --data: 'Fira Code', ui-monospace, Consolas, monospace;
   --bg: #060a12;
   --surface: #0d1524;

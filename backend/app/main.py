@@ -265,4 +265,5 @@ if (WEB_DIST / "index.html").exists():
         candidate = (WEB_DIST / full_path).resolve()
         if candidate.is_file() and candidate.is_relative_to(WEB_DIST.resolve()):
             return FileResponse(candidate)
-        return FileResponse(WEB_DIST / "index.html")
+        return FileResponse(WEB_DIST / "index.html",
+                            headers={"Cache-Control": "no-cache, no-store, must-revalidate"})

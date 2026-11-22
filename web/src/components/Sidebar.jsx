@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { MessageSquare, Ticket, ShieldCheck, FileText, Activity, Plus, Cpu, Database, Radio, Sparkles } from 'lucide-react'
+import { QUICK_PROMPTS } from '../quick'
 
 const NAV = [
   { key: 'chat', label: 'Chat', icon: MessageSquare },
@@ -8,13 +9,6 @@ const NAV = [
   { key: 'approvals', label: 'Approvals', icon: ShieldCheck },
   { key: 'logs', label: 'Flight logs', icon: FileText },
   { key: 'runs', label: 'Runs', icon: Activity },
-]
-
-const QUICK = [
-  ['Part 107 over-people rule', 'Is flying over people legal under Part 107?'],
-  ['Analyze last flight log', 'Analyze the last flight log and open a maintenance ticket if needed'],
-  ['VX-6 20-min inspection', 'Can I fly the VX-6 on a 20-min inspection mission at 120m and what are the risks?'],
-  ['DGCA yellow-zone rules', 'What is required to fly a drone in a yellow zone in India?'],
 ]
 
 export default function Sidebar({ nav, setNav, onNewChat, onQuick, health, pendingCount, mobileOpen, onCloseMobile }) {
@@ -75,9 +69,10 @@ export default function Sidebar({ nav, setNav, onNewChat, onQuick, health, pendi
         <div className="sidebar-divider" />
         <div className="nav-label">Quick prompts</div>
         <div className="quick-list">
-          {QUICK.map(([label, query]) => (
-            <button key={label} className="quick-item" onClick={() => { onQuick(query); onCloseMobile() }}>
-              <Sparkles size={13} /> {label}
+          {QUICK_PROMPTS.map(q => (
+            <button key={q.label} className="quick-item" title={q.query}
+              onClick={() => { onQuick(q.query); onCloseMobile() }}>
+              <Sparkles size={13} /> {q.label}
             </button>
           ))}
         </div>

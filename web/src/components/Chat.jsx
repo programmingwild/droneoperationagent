@@ -4,17 +4,11 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import {
   ArrowUp, BookOpen, Check, ChevronDown, Copy, FileDown, FileText, GitBranch, Menu,
-  Scale, Search, ShieldAlert, Wrench, Zap, Radar, Loader2, AlertTriangle, XCircle,
+  ShieldAlert, Zap, Loader2, AlertTriangle, XCircle,
 } from 'lucide-react'
 import { friendly, formatEvidence, severityClass } from '../format'
+import { QUICK_PROMPTS } from '../quick'
 import { SeverityPill } from './ui'
-
-const SUGGESTIONS = [
-  { icon: Scale, title: 'Legality check', hint: 'Part 107 over-people rule', query: 'Is flying over people legal under Part 107?' },
-  { icon: Wrench, title: 'Analyze flight log', hint: 'Find anomalies, open a ticket', query: 'Analyze the last flight log and open a maintenance ticket if needed' },
-  { icon: Radar, title: 'Plan a mission', hint: 'VX-6 endurance & risk', query: 'Can I fly the VX-6 on a 20-min inspection mission at 120m and what are the risks?' },
-  { icon: Search, title: 'DGCA rules', hint: 'Yellow-zone requirements', query: 'What is required to fly a drone in a yellow zone in India?' },
-]
 
 const VERDICT = {
   GROUND: { label: 'GROUNDED — DO NOT FLY', icon: XCircle, tone: 'ground' },
@@ -39,13 +33,13 @@ export function EmptyState({ onSend }) {
         Grounded answers, cited sources, and human-approved authorizations — in one mission-control workspace.
       </motion.p>
       <motion.div className="suggest-grid" variants={rise}>
-        {SUGGESTIONS.map((s, i) => (
-          <motion.button key={s.title} className="suggest-card" onClick={() => onSend(s.query)}
+        {QUICK_PROMPTS.map((s, i) => (
+          <motion.button key={s.label} className="suggest-card" onClick={() => onSend(s.query)}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.18 + i * 0.07, type: 'spring', stiffness: 260, damping: 24 }}
             whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
             <span className="suggest-icon"><s.icon size={18} strokeWidth={1.7} /></span>
-            <span className="suggest-copy"><b>{s.title}</b><small>{s.hint}</small></span>
+            <span className="suggest-copy"><b>{s.label}</b><small>{s.hint}</small></span>
             <ArrowUp size={14} className="suggest-arrow" />
           </motion.button>
         ))}
@@ -157,6 +151,36 @@ function Message({ m, onReport, onRegenerate, index }) {
   )
 }
 
+export function QuickBar({ onSend, disabled }) {
+  const [open, setOpen] = useState(true)
+  if (!open) {
+    return (
+      <div className="quickbar quickbar-collapsed">
+        <button className="quickbar-reopen" onClick={() => setOpen(true)}>
+          <Zap size={13} /> Quick prompts
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="quickbar">
+      <span className="quickbar-label"><Zap size={12} /> QUICK PROMPTS</span>
+      <div className="quickbar-items">
+        {QUICK_PROMPTS.map(q => (
+          <button key={q.label} className="quick-chip" onClick={() => onSend(q.query)}
+            disabled={disabled} title={q.query}>
+            <q.icon size={14} strokeWidth={1.8} />
+            <span>{q.label}</span>
+          </button>
+        ))}
+      </div>
+      <button className="quickbar-hide" onClick={() => setOpen(false)} title="Hide quick prompts">
+        <ChevronDown size={14} />
+      </button>
+    </div>
+  )
+}
+
 export default function ChatView({ messages, busy, steps, onSend, onReport, onRegenerate, pendingApproval, flightLogs, onOpenSidebar }) {
   const [text, setText] = useState('')
   const [logFile, setLogFile] = useState('')
@@ -183,6 +207,8 @@ export default function ChatView({ messages, busy, steps, onSend, onReport, onRe
           <span className="topbar-live"><span className="live-dot" /> LIVE</span>
         </div>
       </div>
+
+      <QuickBar onSend={submit} disabled={busy} />
 
       <div className="chat-scroll">
         <div className="chat-inner">
