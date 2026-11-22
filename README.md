@@ -94,7 +94,18 @@ python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 # docs: http://127.0.0.1:8000/docs   health: http://127.0.0.1:8000/health
 ```
 
-**UI (Streamlit):**
+**UI (React SPA — recommended):**
+```bash
+# 1. build the SPA once (or on every frontend change)
+cd web && npm install && npm run build && cd ..
+
+# 2. start the API — it also serves the built SPA from the same origin
+python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+# App + API: http://localhost:8000
+```
+For frontend development with hot reload, run `npm run dev` in `web/` (Vite on :5173) and keep the API on :8000; set `VITE_API_URL` if the API is on another host.
+
+**UI (legacy Streamlit):**
 ```bash
 streamlit run frontend/streamlit_app.py
 # UI: http://localhost:8501  (DRONEOPS_API defaults to http://127.0.0.1:8000)

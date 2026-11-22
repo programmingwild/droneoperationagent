@@ -17,6 +17,11 @@ data/vector_store.json
 data/local_embedder.pkl
 data/reports/
 
+# Node / React SPA
+node_modules/
+web/dist/
+web/.vite/
+
 # Local agent tooling (skills installed via skills.sh — not app code)
 .agents/
 

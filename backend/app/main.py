@@ -17,6 +17,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from . import __version__
@@ -36,7 +37,10 @@ TRACING_ON = init_tracing()
 app = FastAPI(title="Drone Ops Agent", version=__version__)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],
+    allow_origins=[
+        "http://localhost:8501", "http://127.0.0.1:8501",
+        "http://localhost:5173", "http://127.0.0.1:5173",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -246,3 +250,19 @@ def report(ticket_id: str):
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     return FileResponse(path, media_type="application/pdf", filename=path.name)
+
+
+# ---------------------------------------------------------------- React SPA
+# When web/dist exists, serve the built single-page app from the same origin as
+# the API. Dev mode (Vite on :5173) talks to this API via CORS above.
+WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
+if (WEB_DIST / "index.html").exists():
+    if (WEB_DIST / "assets").exists():
+        app.mount("/assets", StaticFiles(directory=WEB_DIST / "assets"), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def spa(full_path: str):
+        candidate = (WEB_DIST / full_path).resolve()
+        if candidate.is_file() and candidate.is_relative_to(WEB_DIST.resolve()):
+            return FileResponse(candidate)
+        return FileResponse(WEB_DIST / "index.html")
