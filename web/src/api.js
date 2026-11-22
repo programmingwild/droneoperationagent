@@ -4,7 +4,11 @@ const BASE = (import.meta.env.VITE_API_URL || DEFAULT_API).replace(/\/$/, '')
 
 async function json(path, options) {
   const res = await fetch(`${BASE}${path}`, options)
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) {
+    let detail = res.statusText
+    try { const body = await res.json(); detail = body.detail || JSON.stringify(body) } catch { /* non-JSON body */ }
+    throw new Error(`${res.status} ${detail}`)
+  }
   return res.json()
 }
 

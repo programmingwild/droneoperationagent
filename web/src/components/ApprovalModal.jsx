@@ -35,10 +35,10 @@ export default function ApprovalModal({ pending, onDecide, busy }) {
             </div>
 
             <div className="modal-actions">
-              <motion.button className="btn btn-danger" disabled={busy} onClick={() => onDecide(false)} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+              <motion.button className="btn btn-danger" disabled={busy} onClick={() => onDecide(pending.id, false)} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
                 <X size={16} /> Reject
               </motion.button>
-              <motion.button className="btn btn-primary" disabled={busy} onClick={() => onDecide(true)} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+              <motion.button className="btn btn-primary" disabled={busy} onClick={() => onDecide(pending.id, true)} whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
                 <Check size={16} /> Approve
               </motion.button>
             </div>

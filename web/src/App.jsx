@@ -90,6 +90,7 @@ export default function App() {
   }
 
   const decide = async (id, approved) => {
+    if (!id) { toast('No approval ID available — refresh and retry', 'danger'); return }
     setBusy(true)
     try {
       const res = await api.decide(id, approved)
