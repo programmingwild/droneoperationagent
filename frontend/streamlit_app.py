@@ -727,6 +727,21 @@ with st.sidebar:
 
 # ================================================================== CHAT
 if st.session_state.nav == "chat":
+    # Always-visible quick prompts — no sidebar scrolling required.
+    st.markdown('<div class="qbar-label">QUICK PROMPTS</div>', unsafe_allow_html=True)
+    qbar = st.columns(4)
+    for qi, (qlabel, qtext) in enumerate([
+        ("Part 107 legality", "Is flying over people legal under Part 107?"),
+        ("Analyze flight log", "Analyze the last flight log and open a maintenance ticket if needed"),
+        ("Plan a mission", "Can I fly the VX-6 on a 20-min inspection mission at 120m and what are the risks?"),
+        ("DGCA yellow zone", "What is required to fly a drone in a yellow zone in India?"),
+    ]):
+        with qbar[qi]:
+            if st.button(qlabel, key=f"qbar-{qi}", use_container_width=True, help=qtext):
+                st.session_state.queued_prompt = qtext
+                st.rerun()
+    st.markdown('<div class="qbar-div"></div>', unsafe_allow_html=True)
+
     if not st.session_state.messages:
         docs = health.get("vector_store_docs", "—")
         llm_state = "Groq online" if health.get("llm_available") else "Offline mode"
