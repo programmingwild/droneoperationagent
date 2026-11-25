@@ -38,6 +38,8 @@ jobs:
         run: npm ci --prefix web
       - name: Build React SPA
         run: npm run build --prefix web
+      - name: Build Streamlit-hosted SPA component
+        run: npm run build:streamlit --prefix web
 
   docker:
     runs-on: ubuntu-latest

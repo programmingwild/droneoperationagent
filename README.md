@@ -108,9 +108,15 @@ python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
 For frontend development with hot reload, run `npm run dev` in `web/` (Vite on :5173) and keep the API on :8000; set `VITE_API_URL` if the API is on another host.
 
-**UI (legacy Streamlit):**
+**Streamlit-hosted React SPA (what the public Streamlit link serves):**
 ```bash
 streamlit run frontend/streamlit_app.py
+# UI: http://localhost:8501  (agent runs in-process; no separate API needed)
+```
+
+**Legacy Streamlit UI (optional):**
+```bash
+streamlit run frontend/legacy_app.py
 # UI: http://localhost:8501  (DRONEOPS_API defaults to http://127.0.0.1:8000)
 ```
 
@@ -125,11 +131,11 @@ docker compose up --build
 
 AWS App Runner builds from source using `apprunner.yaml`; a push to `master` triggers a redeploy. The build now installs Node, runs `npm ci && npm run build --prefix web`, and FastAPI serves `web/dist` at `/` on port 8000. GitHub Actions also builds the SPA on every push/PR so regressions fail CI before Docker packaging.
 
-The Streamlit Community Cloud app below is the **legacy** UI; it does not serve the React SPA.
+The Streamlit Community Cloud link below also serves the React SPA: `frontend/streamlit_app.py` hosts the built component in `frontend/spa_component/build` and bridges its API calls to the agent in-process. Regenerate that bundle after UI changes with `npm run build:streamlit` in `web/` and commit it. The legacy Streamlit UI lives in `frontend/legacy_app.py`.
 
 ## Deploy to Streamlit Community Cloud
 
-The repo also runs in **embedded mode**: the UI calls the agent *in-process* (no FastAPI server, no Postgres — SQLite in `data/droneops.db`), which is the only way a single free Streamlit app can host the whole thing. The Docker deployment above is still the reference production stack; embedded mode trades persistence and the separate API surface for a zero-cost public demo.
+The public app runs the React SPA **embedded**: the component's API calls are handled in-process by the same agent graph (no FastAPI server, no Postgres — SQLite in `data/droneops.db`). That is how a single free Streamlit app can host the SPA end to end. Docker/App Runner above remain the reference production stack with the real HTTP surface and persistent storage.
 
 **Steps:**
 1. Sign in at <https://share.streamlit.io> with GitHub → **New app** → pick `programmingwild/droneoperationagent`.
@@ -137,8 +143,7 @@ The repo also runs in **embedded mode**: the UI calls the agent *in-process* (no
 3. **App secrets** (Settings → Secrets): paste this, no real values in the repo:
    ```toml
    GROQ_API_KEY = "gsk_..."
-   EMBEDDED_API = "1"
-   # optional: LANGSMITH_API_KEY = "lsv2_...", LANGSMITH_TRACING = "true"
+      # optional: LANGSMITH_API_KEY = "lsv2_...", LANGSMITH_TRACING = "true"
    ```
 4. Deploy. The first request ingests the corpus into an ephemeral local store (`data/vector_store.json`, NumPy cosine) — ~35 s one-time; redeploys lose it and it rebuilds.
 5. You get a public URL (`https://<app-name>.streamlit.app`) — share it for demos.
