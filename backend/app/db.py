@@ -79,9 +79,26 @@ def normalize_database_url(url: str) -> str:
 def get_engine():
     global _engine, _Session
     if _engine is None:
+        import logging
+
         url = normalize_database_url(get_settings().database_url)
         connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-        _engine = create_engine(url, connect_args=connect_args, pool_pre_ping=True)
+        try:
+            candidate = create_engine(url, connect_args=connect_args, pool_pre_ping=True)
+            with candidate.connect():
+                pass  # fail fast on a bad/misconfigured DATABASE_URL
+        except Exception as exc:
+            # A demo must stay functional (HITL included) even when the
+            # external database is unreachable. SQLite is ephemeral on hosted
+            # free tiers, but it keeps approvals enforceable until the real
+            # DATABASE_URL is fixed.
+            logging.getLogger(__name__).warning(
+                "database unavailable (%s); falling back to local SQLite", exc
+            )
+            url = f"sqlite:///{get_settings().data_dir / 'droneops.db'}"
+            candidate = create_engine(url, connect_args={"check_same_thread": False},
+                                      pool_pre_ping=True)
+        _engine = candidate
         Base.metadata.create_all(_engine)
         _Session = sessionmaker(bind=_engine, expire_on_commit=False)
     return _engine
