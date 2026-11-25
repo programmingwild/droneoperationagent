@@ -36,18 +36,21 @@ export default function App() {
   // Render's free service can be waking up on the first request. Retry
   // quietly with backoff instead of leaving the UI stuck on "Connecting".
   const refresh = useCallback(async (attempt = 0) => {
-    try {
-      const [h, l, p] = await Promise.all([api.health(), api.logs(40), api.pending()])
-      setHealth(h)
-      setLogsData(l)
-      setPendingApprovals(Array.isArray(p) ? p : [])
-    } catch (e) {
-      if (attempt < 5) {
-        setTimeout(() => refresh(attempt + 1), 1200 * (attempt + 1))
-        return
-      }
-      toast(`API unreachable after retries (${e.message})`, 'danger')
+    // Each endpoint is independent: a DB-backed call failing must not hide a
+    // healthy /health response (e.g. Render cold start or Neon waking up).
+    const results = await Promise.allSettled([api.health(), api.logs(40), api.pending()])
+    const ok = results.filter(r => r.status === 'fulfilled').length
+    if (results[0].status === 'fulfilled') setHealth(results[0].value)
+    if (results[1].status === 'fulfilled') setLogsData(results[1].value)
+    if (results[2].status === 'fulfilled') {
+      setPendingApprovals(Array.isArray(results[2].value) ? results[2].value : [])
     }
+    if (ok === 3) return
+    if (attempt < 5) {
+      setTimeout(() => refresh(attempt + 1), 1200 * (attempt + 1))
+      return
+    }
+    toast(`Some services are unavailable (${3 - ok} endpoint${3 - ok === 1 ? '' : 's'})`, 'danger')
   }, [toast])
 
   useEffect(() => { refresh() }, [refresh])
