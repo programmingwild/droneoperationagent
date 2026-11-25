@@ -19,6 +19,24 @@ from backend.app.db import get_session
 from backend.app.schemas import ApproveRequest, ChatRequest
 from frontend.spa_component import nightwatch_spa
 
+
+def _ensure_index():
+    """Streamlit Cloud has ephemeral disk: build the corpus index once per boot."""
+    from backend.app.config import get_settings
+
+    settings = get_settings()
+    backend = settings.vector_backend
+    if backend == "auto":
+        backend = "pinecone" if settings.pinecone_api_key else "local"
+    if backend != "local" or (ROOT / "data" / "vector_store.json").exists():
+        return
+    from backend.app.rag.ingest import ingest
+
+    ingest(reset=True)
+
+
+_ensure_index()
+
 st.set_page_config(page_title="Drone Ops Agent", layout="wide", initial_sidebar_state="collapsed")
 
 # Remove Streamlit chrome: the SPA owns the entire viewport.
