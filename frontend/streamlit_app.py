@@ -74,27 +74,16 @@ def _redirect_page() -> str:
   <div class="card">
     <div class="eyebrow"><span class="dot"></span> DRONE OPS / MOVED</div>
     <h1>New home,<br><em>same mission.</em></h1>
-    <p>This demo has moved to its production deployment. The new app will open in a new tab automatically — or use the button below.</p>
+    <p>This demo has moved to its production deployment. The new app will load here automatically — or use the button below.</p>
     <a class="btn" href="__URL__" target="_blank" rel="noopener">Open the new app <span>→</span></a>
     <div class="url">__URL__</div>
-    <div class="count">OPENING NEW TAB AUTOMATICALLY · 3s</div>
+    <div class="count">LOADING THE NEW APP HERE · 3s</div>
   </div>
 <script>
-  // Streamlit Cloud sandboxes its iframe without top-navigation permission,
-  // so a same-tab redirect is impossible. A form submission to a new tab is
-  // the reliable automatic equivalent; the button is the manual fallback.
-  setTimeout(function () {
-    try {
-      var form = document.createElement('form');
-      form.action = "__URL__";
-      form.method = "GET";
-      form.target = "_blank";
-      document.body.appendChild(form);
-      form.submit();
-    } catch (e) {
-      window.open("__URL__", "_blank", "noopener");
-    }
-  }, 3000);
+  // Streamlit Cloud sandboxes its iframe without top-navigation permission.
+  // Navigating this frame itself is always allowed and fills the viewport, so
+  // visitors land on the new app; the button opens it in a fresh tab if needed.
+  setTimeout(function () { window.location.replace("__URL__"); }, 3000);
 </script>
 </body>
 </html>
