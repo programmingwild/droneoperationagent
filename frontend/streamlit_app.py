@@ -44,6 +44,8 @@ st.markdown(
     """
     <style>
       header, footer, #MainMenu, .stDeployButton {visibility: hidden !important;}
+      #stStatusWidget, [data-testid="stStatusWidget"], .stStatusWidget {display: none !important;}
+      html, body, .stApp {overflow: hidden !important;}
       .block-container {padding: 0 !important; max-width: none !important;}
       .stApp {background: #050607 !important;}
       div[data-testid="stIFrame"] iframe {display: block; width: 100% !important;}

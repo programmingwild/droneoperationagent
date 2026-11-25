@@ -172,6 +172,7 @@ export default function App() {
 
       <div className="main">
         <TopBar nav={nav} health={health} pendingCount={pendingApprovals.length}
+          onNewChat={newChat}
           onOpenSidebar={() => setMobileNav(true)}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenApprovals={() => setNav('approvals')} />

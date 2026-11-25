@@ -56,7 +56,7 @@ function dispatchNext() {
 
 function fitFrame() {
   const height = window.parent?.innerHeight || window.innerHeight
-  Streamlit.setFrameHeight(Math.max(560, height))
+  Streamlit.setFrameHeight(Math.max(560, height - 1))
 }
 
 Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, event => {

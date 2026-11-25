@@ -1,5 +1,5 @@
 import React from 'react'
-import { ChevronRight, Menu, Search, ShieldAlert } from 'lucide-react'
+import { ChevronRight, Menu, Plus, Search, ShieldAlert } from 'lucide-react'
 import { Clock, MOD_KEY, StatusDot } from './ui'
 
 const LABELS = {
@@ -10,7 +10,7 @@ const LABELS = {
   runs: 'Run audit',
 }
 
-export default function TopBar({ nav, health, pendingCount, onOpenSidebar, onOpenPalette, onOpenApprovals }) {
+export default function TopBar({ nav, health, pendingCount, onOpenSidebar, onOpenPalette, onOpenApprovals, onNewChat }) {
   const nominal = health?.llm_available
   return (
     <header className="topbar">
@@ -23,6 +23,11 @@ export default function TopBar({ nav, health, pendingCount, onOpenSidebar, onOpe
         <ChevronRight size={12} className="crumb-sep" />
         <b>{LABELS[nav] || LABELS.chat}</b>
       </div>
+
+      <button className="topbar-new" onClick={onNewChat} title="Start a new mission">
+        <Plus size={13} strokeWidth={2.3} />
+        <span>New mission</span>
+      </button>
 
       <div className="topbar-center">
         <span className="topbar-signal">
