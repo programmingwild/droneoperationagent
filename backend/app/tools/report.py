@@ -13,7 +13,9 @@ from reportlab.lib.units import mm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from ..config import get_settings
-from ..formatting import FRIENDLY, format_evidence, friendly
+from ..formatting import (
+    FRIENDLY, format_evidence, format_timestamp, friendly, ticket_headline,
+)
 from .ticket import get_ticket
 
 NAVY = colors.HexColor("#0b1220")
@@ -55,11 +57,17 @@ def export_ticket_pdf(ticket_id: str, out_path: str | Path | None = None) -> Pat
     story = []
 
     # ---- header band -------------------------------------------------------
+    headline, verdict, score = ticket_headline(ticket["title"])
+    subtitle = html.escape(headline)
+    if verdict:
+        subtitle += f" &nbsp;·&nbsp; {html.escape(friendly(verdict))}"
+        if score is not None:
+            subtitle += f" ({score}/100)"
     header_text = (
         '<font color="#67e8f9" size=7.5>UAV FLEET INTELLIGENCE · MAINTENANCE RECORD</font><br/>'
         '<font color="#ffffff" size=18><b>Maintenance Ticket Report</b></font><br/>'
         f'<font color="#a9c1dd" size=9>Ticket {html.escape(str(ticket["id"]))} &nbsp;·&nbsp; '
-        f'{html.escape(str(ticket["title"]))}</font>'
+        f'{subtitle}</font>'
     )
     header = Table([[Paragraph(header_text, HEAD)]], colWidths=[width])
     header.setStyle(TableStyle([
@@ -78,7 +86,7 @@ def export_ticket_pdf(ticket_id: str, out_path: str | Path | None = None) -> Pat
         ["Severity", f'<font color="#{sev_color.hexval()[2:]}"><b>{html.escape(sev)}</b></font>'],
         ["Status", friendly(ticket["status"])],
         ["Source", friendly(ticket["source"])],
-        ["Created", str(ticket["created_at"] or "—")],
+        ["Created", format_timestamp(ticket["created_at"])],
         ["Log file", str(ticket["log_file"] or "—")],
     ]
     meta = Table([[k, Paragraph(str(v), BODY)] for k, v in meta_rows],

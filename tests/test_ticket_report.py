@@ -1,3 +1,5 @@
+from pypdf import PdfReader
+
 from backend.app.tools.flight_logs import parse_flight_log
 from backend.app.tools.report import export_ticket_pdf
 from backend.app.tools.ticket import (
@@ -33,6 +35,11 @@ def test_export_report_pdf(sample_log_path):
     pdf = export_ticket_pdf(t["id"])
     assert pdf.exists()
     assert pdf.read_bytes().startswith(b"%PDF")
+    text = "\n".join((page.extract_text() or "") for page in PdfReader(pdf).pages)
+    assert "Peak imbalance" in text
+    assert "-4.7%, -4.8%" not in text          # no raw telemetry array dump
+    assert "verdict Grounded" not in text       # title split into label + score
+    assert " UTC" in text                       # no raw ISO timestamp
 
 
 def test_unknown_ticket_pdf():
