@@ -74,16 +74,27 @@ def _redirect_page() -> str:
   <div class="card">
     <div class="eyebrow"><span class="dot"></span> DRONE OPS / MOVED</div>
     <h1>New home,<br><em>same mission.</em></h1>
-    <p>This demo has moved to its production deployment. You'll be redirected automatically in a few seconds.</p>
-    <a class="btn" href="__URL__" target="_top">Open the new app <span>→</span></a>
+    <p>This demo has moved to its production deployment. The new app will open in a new tab automatically — or use the button below.</p>
+    <a class="btn" href="__URL__" target="_blank" rel="noopener">Open the new app <span>→</span></a>
     <div class="url">__URL__</div>
-    <div class="count">REDIRECTING AUTOMATICALLY · 4s</div>
+    <div class="count">OPENING NEW TAB AUTOMATICALLY · 3s</div>
   </div>
 <script>
+  // Streamlit Cloud sandboxes its iframe without top-navigation permission,
+  // so a same-tab redirect is impossible. A form submission to a new tab is
+  // the reliable automatic equivalent; the button is the manual fallback.
   setTimeout(function () {
-    try { window.top.location.replace("__URL__"); }
-    catch (e) { window.location.replace("__URL__"); }
-  }, 4000);
+    try {
+      var form = document.createElement('form');
+      form.action = "__URL__";
+      form.method = "GET";
+      form.target = "_blank";
+      document.body.appendChild(form);
+      form.submit();
+    } catch (e) {
+      window.open("__URL__", "_blank", "noopener");
+    }
+  }, 3000);
 </script>
 </body>
 </html>
@@ -125,12 +136,6 @@ st.markdown(
 # Recruiters and other visitors land here first: ask them to use the new app,
 # then send them there. `?legacy=1` keeps the embedded demo reachable for QA.
 if st.query_params.get("legacy") != "1":
-    # Parent-level refresh (the component iframe is sandboxed and cannot
-    # navigate the top window itself).
-    st.markdown(
-        f'<meta http-equiv="refresh" content="4;url={RENDER_URL}" />',
-        unsafe_allow_html=True,
-    )
     components.html(_redirect_page(), height=680)
     st.stop()
 
