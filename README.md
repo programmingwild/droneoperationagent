@@ -129,7 +129,11 @@ docker compose up --build
 
 ## Deploy (auto-deploy on `master`)
 
-**Render — full stack (recommended):** `render.yaml` is a Blueprint that provisions a Docker web service (FastAPI + the built React SPA) and a managed Postgres. Go to Render Dashboard → **New → Blueprint** → connect `programmingwild/droneoperationagent` → **Apply**. Set `GROQ_API_KEY` (and optional LangSmith keys) in the dashboard; they are marked `sync: false` so they never enter the repo. `autoDeploy: true` redeploys on every push to `master`, and `/health` is the health check. The container listens on Render's `PORT` (Dockerfile falls back to 8000). Render's free Postgres expires 30 days after creation: it becomes inaccessible, with a 14-day grace period to upgrade to a paid plan; after that Render deletes it **with all data**. Free web services also spin down after 15 minutes idle (local files are lost on restart) and get 750 free instance-hours/month. Upgrade the database to a paid plan (from $6/month) before expiry if you need durable approvals/audit history.
+**Render — full stack (recommended, all-free):** `render.yaml` is a Blueprint for a Docker web service (FastAPI + the built React SPA). Go to Render Dashboard → **New → Blueprint** → connect `programmingwild/droneoperationagent` → **Apply**. `autoDeploy: true` redeploys on every push to `master`, `/health` is the health check, and the container listens on Render's `PORT` (Dockerfile falls back to 8000).
+
+For the database, use **Neon Postgres free tier** (permanent, no card, no 30-day expiry): sign up at <https://neon.tech>, create a project, copy its `postgres://…` connection string, and set it as the `DATABASE_URL` secret on the Render service. Set `GROQ_API_KEY` (and optional LangSmith/Pinecone keys) too — all secrets are marked `sync: false` so they never enter the repo. Our DB layer normalizes `postgres://` to the SQLAlchemy driver URL automatically.
+
+Neon free limits: 1 GB storage/project, 100 CU-hours/month, scale-to-zero after 5 minutes idle (data persists). Render free web services spin down after 15 minutes idle and get 750 instance-hours/month; local files are lost on restart, but the corpus is baked into the image and all durable state lives in Neon.
 
 **Streamlit Community Cloud — public demo (live now):** watches this repo and redeploys on every push to `master`. It serves the React SPA: `frontend/streamlit_app.py` hosts the built component in `frontend/spa_component/build` and bridges its API calls to the agent in-process. Regenerate that bundle after UI changes with `npm run build:streamlit` in `web/` and commit it. The legacy Streamlit UI lives in `frontend/legacy_app.py`. GitHub Actions builds both SPA bundles on every push/PR so regressions fail CI first.
 
@@ -137,7 +141,7 @@ docker compose up --build
 
 ## Deploy to Streamlit Community Cloud
 
-The public app runs the React SPA **embedded**: the component's API calls are handled in-process by the same agent graph (no FastAPI server, no Postgres — SQLite in `data/droneops.db`). That is how a single free Streamlit app can host the SPA end to end. Render (and local Docker/Compose) is the reference production stack with the real HTTP surface and persistent storage; Streamlit Cloud is the embedded demo.
+The public app runs the React SPA **embedded**: the component's API calls are handled in-process by the same agent graph (no FastAPI server, no Postgres — SQLite in `data/droneops.db`). That is how a single free Streamlit app can host the SPA end to end. Render + Neon (and local Docker/Compose) is the reference full stack with the real HTTP surface and persistent storage; Streamlit Cloud is the embedded demo.
 
 **Steps:**
 1. Sign in at <https://share.streamlit.io> with GitHub → **New app** → pick `programmingwild/droneoperationagent`.
