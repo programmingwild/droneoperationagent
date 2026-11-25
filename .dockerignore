@@ -13,3 +13,5 @@ evals
 docs
 *.md
 !README.md
+web/node_modules
+web/dist

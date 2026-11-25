@@ -9,6 +9,9 @@ build:
       - pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2"
       - pip install -r requirements.txt
       - python -m backend.app.rag.ingest --reset
+      # Build the React SPA so FastAPI serves the new UI from the same origin.
+      # Node is not part of the Python runtime, so fetch a pinned binary locally.
+      - curl -fsSL https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-x64.tar.gz -o /tmp/node.tar.gz && mkdir -p /tmp/node && tar -xzf /tmp/node.tar.gz -C /tmp/node --strip-components=1 && PATH="/tmp/node/bin:$PATH" npm ci --prefix web && PATH="/tmp/node/bin:$PATH" npm run build --prefix web
 run:
   command: python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
   network:

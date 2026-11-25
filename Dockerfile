@@ -1,4 +1,11 @@
 # syntax=docker/dockerfile:1
+FROM node:22-alpine AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build
+
 FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -18,6 +25,7 @@ RUN pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2" \
 COPY backend ./backend
 COPY scripts ./scripts
 COPY data ./data
+COPY --from=web /web/dist ./web/dist
 
 # Bake the corpus + embeddings into the image (fast, offline cold start).
 RUN python scripts/make_sample_assets.py && python scripts/make_sample_paper.py \
