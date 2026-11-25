@@ -20,7 +20,7 @@ export default function Sidebar({
       {mobileOpen && <div className="sidebar-scrim" onClick={onCloseMobile} />}
       <aside className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`} aria-label="Primary navigation">
         <button className="rail-brand" onClick={() => { setNav('chat'); onCloseMobile() }}
-          aria-label="Drone Ops — mission control" title="Mission control">
+          aria-label="Mission control">
           <span className="rail-brand-mark">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
               strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -44,7 +44,6 @@ export default function Sidebar({
               onClick={() => { setNav(key); onCloseMobile() }}
               aria-label={label}
               aria-current={nav === key ? 'page' : undefined}
-              title={label}
             >
               {nav === key && (
                 <motion.span layoutId="nav-active" className="nav-active-bg"
@@ -62,8 +61,7 @@ export default function Sidebar({
 
         <div className="sidebar-spacer" />
 
-        <button className="rail-btn" onClick={onOpenPalette} aria-label="Open command palette"
-          title="Command palette (Ctrl/⌘ K)">
+        <button className="rail-btn" onClick={onOpenPalette} aria-label="Command palette">
           <Command size={16} strokeWidth={1.7} />
           <span className="nav-text">Command palette</span>
         </button>

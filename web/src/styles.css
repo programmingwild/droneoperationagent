@@ -348,6 +348,39 @@ kbd {
 .rail-btn .nav-text { display: none; }
 .sidebar-spacer { flex: 1; min-height: 12px; }
 
+/* Hover/focus labels for the icon rail (desktop only; mobile drawer has text). */
+@media (min-width: 901px) {
+  .sidebar { z-index: 30; overflow: visible; }
+  .rail-brand, .rail-btn { position: relative; }
+  .rail-brand::after, .rail-btn::after, .nav-item::after {
+    content: attr(aria-label);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    z-index: 31;
+    padding: 5px 9px;
+    border-radius: 6px;
+    border: 1px solid rgba(216, 255, 62, .22);
+    background: #0d110d;
+    color: var(--text);
+    font-family: var(--data);
+    font-size: .52rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    opacity: 0;
+    transform: translate(-6px, -50%);
+    transition: opacity .16s var(--ease), transform .16s var(--ease);
+  }
+  .rail-brand:hover::after, .rail-btn:hover::after, .nav-item:hover::after,
+  .rail-brand:focus-visible::after, .rail-btn:focus-visible::after, .nav-item:focus-visible::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
 /* ---------- main / topbar ---------- */
 .main { position: relative; z-index: 1; flex: 1; min-width: 0; height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
 .topbar {
