@@ -33,14 +33,20 @@ export default function App() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4200)
   }, [])
 
-  const refresh = useCallback(async () => {
+  // Render's free service can be waking up on the first request. Retry
+  // quietly with backoff instead of leaving the UI stuck on "Connecting".
+  const refresh = useCallback(async (attempt = 0) => {
     try {
       const [h, l, p] = await Promise.all([api.health(), api.logs(40), api.pending()])
       setHealth(h)
       setLogsData(l)
       setPendingApprovals(Array.isArray(p) ? p : [])
     } catch (e) {
-      toast(`API unreachable — start FastAPI on port 8000 (${e.message})`, 'danger')
+      if (attempt < 5) {
+        setTimeout(() => refresh(attempt + 1), 1200 * (attempt + 1))
+        return
+      }
+      toast(`API unreachable after retries (${e.message})`, 'danger')
     }
   }, [toast])
 
