@@ -129,13 +129,13 @@ docker compose up --build
 
 ## Deploy (auto-deploy on `master`)
 
-AWS App Runner builds from source using `apprunner.yaml`; a push to `master` triggers a redeploy. The build now installs Node, runs `npm ci && npm run build --prefix web`, and FastAPI serves `web/dist` at `/` on port 8000. GitHub Actions also builds the SPA on every push/PR so regressions fail CI before Docker packaging.
+**Live deployment:** Streamlit Community Cloud watches this repo and redeploys on every push to `master`. It serves the React SPA: `frontend/streamlit_app.py` hosts the built component in `frontend/spa_component/build` and bridges its API calls to the agent in-process. Regenerate that bundle after UI changes with `npm run build:streamlit` in `web/` and commit it. The legacy Streamlit UI lives in `frontend/legacy_app.py`. GitHub Actions builds both SPA bundles on every push/PR so regressions fail CI first.
 
-The Streamlit Community Cloud link below also serves the React SPA: `frontend/streamlit_app.py` hosts the built component in `frontend/spa_component/build` and bridges its API calls to the agent in-process. Regenerate that bundle after UI changes with `npm run build:streamlit` in `web/` and commit it. The legacy Streamlit UI lives in `frontend/legacy_app.py`.
+**Optional FastAPI deployment:** `apprunner.yaml` is a *template* for AWS App Runner (it contains placeholder secret ARNs and no service name/URL). If you create an App Runner service connected to this repo and enable auto-deploy, a push to `master` builds the SPA with Node, runs `npm ci && npm run build --prefix web`, and FastAPI serves `web/dist` at `/` on port 8000. Docker/Compose is the local reference for that full HTTP + Postgres stack.
 
 ## Deploy to Streamlit Community Cloud
 
-The public app runs the React SPA **embedded**: the component's API calls are handled in-process by the same agent graph (no FastAPI server, no Postgres — SQLite in `data/droneops.db`). That is how a single free Streamlit app can host the SPA end to end. Docker/App Runner above remain the reference production stack with the real HTTP surface and persistent storage.
+The public app runs the React SPA **embedded**: the component's API calls are handled in-process by the same agent graph (no FastAPI server, no Postgres — SQLite in `data/droneops.db`). That is how a single free Streamlit app can host the SPA end to end. Docker/Compose and the optional App Runner template above are the reference production stack with the real HTTP surface and persistent storage.
 
 **Steps:**
 1. Sign in at <https://share.streamlit.io> with GitHub → **New app** → pick `programmingwild/droneoperationagent`.
