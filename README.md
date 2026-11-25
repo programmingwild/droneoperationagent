@@ -50,7 +50,7 @@ flowchart LR
 - Embeddings: local `sentence-transformers/all-MiniLM-L6-v2` only (no external embedding API)
 - Vector store: **Pinecone** (serverless, cosine) or **local JSON+numpy** (`VECTOR_BACKEND=auto`)
 - Storage: SQLite by default; Postgres via `DATABASE_URL` (used in docker-compose)
-- React 19 + Vite 7 SPA (Framer Motion, lucide-react), legacy Streamlit UI, Docker/Compose, GitHub Actions, AWS App Runner config (`apprunner.yaml`)
+- React 19 + Vite 7 SPA (Framer Motion, lucide-react), legacy Streamlit UI, Docker/Compose, GitHub Actions, Render Blueprint (`render.yaml`), AWS App Runner template (`apprunner.yaml`)
 
 ## Repository layout
 
@@ -129,13 +129,15 @@ docker compose up --build
 
 ## Deploy (auto-deploy on `master`)
 
-**Live deployment:** Streamlit Community Cloud watches this repo and redeploys on every push to `master`. It serves the React SPA: `frontend/streamlit_app.py` hosts the built component in `frontend/spa_component/build` and bridges its API calls to the agent in-process. Regenerate that bundle after UI changes with `npm run build:streamlit` in `web/` and commit it. The legacy Streamlit UI lives in `frontend/legacy_app.py`. GitHub Actions builds both SPA bundles on every push/PR so regressions fail CI first.
+**Render — full stack (recommended):** `render.yaml` is a Blueprint that provisions a Docker web service (FastAPI + the built React SPA) and a managed Postgres. Go to Render Dashboard → **New → Blueprint** → connect `programmingwild/droneoperationagent` → **Apply**. Set `GROQ_API_KEY` (and optional LangSmith keys) in the dashboard; they are marked `sync: false` so they never enter the repo. `autoDeploy: true` redeploys on every push to `master`, and `/health` is the health check. The container listens on Render's `PORT` (Dockerfile falls back to 8000). Render's free Postgres expires after 30 days — upgrade it or back up the database if you need long-lived approvals/audit data.
 
-**Optional FastAPI deployment:** `apprunner.yaml` is a *template* for AWS App Runner (it contains placeholder secret ARNs and no service name/URL). If you create an App Runner service connected to this repo and enable auto-deploy, a push to `master` builds the SPA with Node, runs `npm ci && npm run build --prefix web`, and FastAPI serves `web/dist` at `/` on port 8000. Docker/Compose is the local reference for that full HTTP + Postgres stack.
+**Streamlit Community Cloud — public demo (live now):** watches this repo and redeploys on every push to `master`. It serves the React SPA: `frontend/streamlit_app.py` hosts the built component in `frontend/spa_component/build` and bridges its API calls to the agent in-process. Regenerate that bundle after UI changes with `npm run build:streamlit` in `web/` and commit it. The legacy Streamlit UI lives in `frontend/legacy_app.py`. GitHub Actions builds both SPA bundles on every push/PR so regressions fail CI first.
+
+**AWS App Runner — optional template:** `apprunner.yaml` contains placeholder secret ARNs and no service name/URL. Create a service connected to this repo and enable auto-deploy if you prefer App Runner. It likewise builds the SPA with Node and serves `web/dist` from FastAPI.
 
 ## Deploy to Streamlit Community Cloud
 
-The public app runs the React SPA **embedded**: the component's API calls are handled in-process by the same agent graph (no FastAPI server, no Postgres — SQLite in `data/droneops.db`). That is how a single free Streamlit app can host the SPA end to end. Docker/Compose and the optional App Runner template above are the reference production stack with the real HTTP surface and persistent storage.
+The public app runs the React SPA **embedded**: the component's API calls are handled in-process by the same agent graph (no FastAPI server, no Postgres — SQLite in `data/droneops.db`). That is how a single free Streamlit app can host the SPA end to end. Render (and local Docker/Compose) is the reference production stack with the real HTTP surface and persistent storage; Streamlit Cloud is the embedded demo.
 
 **Steps:**
 1. Sign in at <https://share.streamlit.io> with GitHub → **New app** → pick `programmingwild/droneoperationagent`.
@@ -143,7 +145,7 @@ The public app runs the React SPA **embedded**: the component's API calls are ha
 3. **App secrets** (Settings → Secrets): paste this, no real values in the repo:
    ```toml
    GROQ_API_KEY = "gsk_..."
-      # optional: LANGSMITH_API_KEY = "lsv2_...", LANGSMITH_TRACING = "true"
+       # optional: LANGSMITH_API_KEY = "lsv2_...", LANGSMITH_TRACING = "true"
    ```
 4. Deploy. The first request ingests the corpus into an ephemeral local store (`data/vector_store.json`, NumPy cosine) — ~35 s one-time; redeploys lose it and it rebuilds.
 5. You get a public URL (`https://<app-name>.streamlit.app`) — share it for demos.

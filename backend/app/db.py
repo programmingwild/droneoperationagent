@@ -69,10 +69,17 @@ _engine = None
 _Session = None
 
 
+def normalize_database_url(url: str) -> str:
+    """Render/Heroku provide `postgres://`; SQLAlchemy needs a driver scheme."""
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg2://" + url[len("postgres://"):]
+    return url
+
+
 def get_engine():
     global _engine, _Session
     if _engine is None:
-        url = get_settings().database_url
+        url = normalize_database_url(get_settings().database_url)
         connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
         _engine = create_engine(url, connect_args=connect_args, pool_pre_ping=True)
         Base.metadata.create_all(_engine)
