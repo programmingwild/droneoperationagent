@@ -74,16 +74,24 @@ def _redirect_page() -> str:
   <div class="card">
     <div class="eyebrow"><span class="dot"></span> DRONE OPS / MOVED</div>
     <h1>New home,<br><em>same mission.</em></h1>
-    <p>This demo has moved to its production deployment. The new app is opening now — or use the button below.</p>
-    <a class="btn" href="__URL__" target="_blank" rel="noopener">Open the new app <span>→</span></a>
+    <p>This demo has moved to its production deployment. Click anywhere or press Enter to open the new app in a new tab.</p>
+    <a class="btn" id="go" href="__URL__" target="_blank" rel="noopener" autofocus tabindex="0">Open the new app <span>→</span></a>
     <div class="url">__URL__</div>
-    <div class="count">OPENING THE NEW APP · STREAMLIT CLOUD SANDBOX LIMITS SAME-TAB REDIRECTS</div>
+    <div class="count">STREAMLIT CLOUD SANDBOX BLOCKS SAME-TAB REDIRECTS</div>
   </div>
 <script>
-  // Streamlit Cloud sandboxes its app iframe without allow-top-navigation, so
-  // a same-tab redirect is impossible from inside the app. Open Render as a
-  // real top-level page instead; the button is the manual fallback.
-  try { window.open("__URL__", "_blank", "noopener,noreferrer"); } catch (e) {}
+  // Streamlit Cloud sandboxes its app iframe without allow-top-navigation and
+  // popup blockers reject unattended window.open(). Opening Render on the
+  // first real interaction is a genuine top-level navigation, not an embed.
+  var opened = false;
+  function go() {
+    if (opened) return;
+    opened = true;
+    window.open("__URL__", "_blank", "noopener,noreferrer");
+  }
+  document.getElementById("go").focus();
+  document.addEventListener("pointerdown", go, { once: true });
+  document.addEventListener("keydown", go, { once: true });
 </script>
 </body>
 </html>
